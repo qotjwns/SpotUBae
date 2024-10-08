@@ -20,6 +20,10 @@ class Buttons extends StatelessWidget {
             // 버튼 2 클릭 시 동작
             print('Button 2 Pressed');
           },
+          style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black, // 배경색 검정색
+          minimumSize: Size(200, 40), // 버튼 크기 설정
+        ),
           child: const Text('BACK'),
         ),
         ElevatedButton(
