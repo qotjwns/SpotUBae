@@ -42,12 +42,13 @@ class HomeScreen extends StatelessWidget {
                 Column(
                   children: [
                     const SizedBox(height: 50,),
-                    ButtonWidget(
-                      label: 'Chest', // 버튼에 표시될 텍스트
-                      onPressed: () {
-                        print('Button clicked!');
-                      },
-                    ),
+                    Mybuttons()
+                    //ButtonWidget(
+                     // label: 'Chest', // 버튼에 표시될 텍스트
+                      //onPressed: () {
+                        //print('Button clicked!');
+                      //},
+                    //),
                   ],
                 ),
               ],
