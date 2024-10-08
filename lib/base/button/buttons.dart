@@ -14,7 +14,8 @@ class Buttons extends StatelessWidget {
             print('Button 1 Pressed');
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black, // 배경색 검정색
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,// 배경색 검정색
             minimumSize: Size(300, 50), // 버튼 크기 설정
           ),
           child: const Text('CHEST'),
@@ -26,7 +27,8 @@ class Buttons extends StatelessWidget {
             print('Button 2 Pressed');
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black, // 배경색 검정색
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,// 배경색 검정색
             minimumSize: Size(300, 50), // 버튼 크기 설정
         ),
           child: const Text('BACK'),
@@ -38,7 +40,8 @@ class Buttons extends StatelessWidget {
             print('Button 3 Pressed');
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black, // 배경색 검정색
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,// 배경색 검정색
             minimumSize: Size(300, 50), // 버튼 크기 설정
           ),
           child: const Text('SHOULDER'),
@@ -50,7 +53,8 @@ class Buttons extends StatelessWidget {
             print('Button 3 Pressed');
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black, // 배경색 검정색
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,// 배경색 검정색
             minimumSize: Size(300, 50), // 버튼 크기 설정
           ),
           child: const Text('LEGS'),
@@ -62,7 +66,8 @@ class Buttons extends StatelessWidget {
             print('Button 3 Pressed');
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black, // 배경색 검정색
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,// 배경색 검정색
             minimumSize: Size(300, 50), // 버튼 크기 설정
           ),
           child: const Text('ARMS'),
