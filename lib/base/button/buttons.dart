@@ -13,21 +13,49 @@ class Buttons extends StatelessWidget {
             // 버튼 1 클릭 시 동작
             print('Button 1 Pressed');
           },
-          child: Text('Button 1'),
+          child: const Text('CHEST'),
         ),
         ElevatedButton(
           onPressed: () {
             // 버튼 2 클릭 시 동작
             print('Button 2 Pressed');
           },
-          child: Text('Button 2'),
+          child: const Text('BACK'),
         ),
         ElevatedButton(
           onPressed: () {
             // 버튼 3 클릭 시 동작
             print('Button 3 Pressed');
           },
-          child: Text('Button 3'),
+          child: const Text('SHOULDER'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            // 버튼 3 클릭 시 동작
+            print('Button 3 Pressed');
+          },
+          child: const Text('LEGS'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            // 버튼 3 클릭 시 동작
+            print('Button 3 Pressed');
+          },
+          child: const Text('ARMS'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            // 버튼 3 클릭 시 동작
+            print('Button 3 Pressed');
+          },
+          child: const Text('ABS'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            // 버튼 3 클릭 시 동작
+            print('Button 3 Pressed');
+          },
+          child: const Text('CARDIO'),
         ),
       ],
     );

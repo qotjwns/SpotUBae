@@ -3,6 +3,7 @@ import 'package:group_app/date.dart';
 import 'package:intl/intl.dart';
 
 import '../base/button/button_widget.dart';
+import '../base/button/buttons.dart';
 
 void main() {
   runApp(const HomeScreen());
@@ -39,9 +40,9 @@ class HomeScreen extends StatelessWidget {
                       Text(formattedDate, style: const TextStyle(fontSize: 25,fontWeight: FontWeight.bold),)
                     ],
                   ),
-                Column(
+                const Column(
                   children: [
-                    const SizedBox(height: 50,),
+                    SizedBox(height: 50,),
                     Buttons()
                     //ButtonWidget(
                      // label: 'Chest', // 버튼에 표시될 텍스트
