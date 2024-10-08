@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:group_app/screen/first_screen.dart';
 import 'package:intl/intl.dart';
 
 import '../base/button/buttons.dart';
@@ -8,8 +7,8 @@ void main() {
   runApp(const FirstScreen());
 }
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class FirstScreen extends StatelessWidget {
+  const FirstScreen({super.key});
 
   // This widget is the root of your application.
   @override
@@ -39,33 +38,33 @@ class HomeScreen extends StatelessWidget {
                       Text(formattedDate, style: const TextStyle(fontSize: 25,fontWeight: FontWeight.bold),)
                     ],
                   ),
-                Column(
-                  children: [
-                    const SizedBox(height: 50,),
-                    ElevatedButton(
-                      onPressed: () {
-                        // 버튼 1 클릭 시 동작
-                        print('Button 1 Pressed');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,// 배경색 검정색
-                        minimumSize: Size(300, 50), // 버튼 크기 설정
+                  Column(
+                    children: [
+                      const SizedBox(height: 50,),
+                      ElevatedButton(
+                        onPressed: () {
+                          // 버튼 1 클릭 시 동작
+                          print('Button 1 Pressed');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,// 배경색 검정색
+                          minimumSize: Size(300, 50), // 버튼 크기 설정
+                        ),
+                        child: const Text('CHEST'),
                       ),
-                      child: const Text('START WORKOUT', style: TextStyle(fontSize: 20),),
-                    ),
-                    //ButtonWidget(
-                     // label: 'Chest', // 버튼에 표시될 텍스트
+                      //ButtonWidget(
+                      // label: 'Chest', // 버튼에 표시될 텍스트
                       //onPressed: () {
-                        //print('Button clicked!');
+                      //print('Button clicked!');
                       //},
-                    //),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
+                      //),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
