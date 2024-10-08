@@ -13,6 +13,10 @@ class Buttons extends StatelessWidget {
             // 버튼 1 클릭 시 동작
             print('Button 1 Pressed');
           },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black, // 배경색 검정색
+            minimumSize: Size(200, 40), // 버튼 크기 설정
+          ),
           child: const Text('CHEST'),
         ),
         ElevatedButton(
@@ -31,6 +35,10 @@ class Buttons extends StatelessWidget {
             // 버튼 3 클릭 시 동작
             print('Button 3 Pressed');
           },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black, // 배경색 검정색
+            minimumSize: Size(200, 40), // 버튼 크기 설정
+          ),
           child: const Text('SHOULDER'),
         ),
         ElevatedButton(
@@ -38,6 +46,10 @@ class Buttons extends StatelessWidget {
             // 버튼 3 클릭 시 동작
             print('Button 3 Pressed');
           },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black, // 배경색 검정색
+            minimumSize: Size(200, 40), // 버튼 크기 설정
+          ),
           child: const Text('LEGS'),
         ),
         ElevatedButton(
@@ -45,6 +57,10 @@ class Buttons extends StatelessWidget {
             // 버튼 3 클릭 시 동작
             print('Button 3 Pressed');
           },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black, // 배경색 검정색
+            minimumSize: Size(200, 40), // 버튼 크기 설정
+          ),
           child: const Text('ARMS'),
         ),
         ElevatedButton(
@@ -52,6 +68,10 @@ class Buttons extends StatelessWidget {
             // 버튼 3 클릭 시 동작
             print('Button 3 Pressed');
           },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black, // 배경색 검정색
+            minimumSize: Size(200, 40), // 버튼 크기 설정
+          ),
           child: const Text('ABS'),
         ),
         ElevatedButton(
@@ -59,6 +79,10 @@ class Buttons extends StatelessWidget {
             // 버튼 3 클릭 시 동작
             print('Button 3 Pressed');
           },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black, // 배경색 검정색
+            minimumSize: Size(200, 40), // 버튼 크기 설정
+          ),
           child: const Text('CARDIO'),
         ),
       ],
