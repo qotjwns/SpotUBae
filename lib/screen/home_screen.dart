@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:group_app/date.dart';
 import 'package:group_app/login/login_screen.dart';
 import 'package:intl/intl.dart';
-<<<<<<< Updated upstream
+
 
 import '../base/button/button_widget.dart';
-=======
-import '../base/bottom_nav_bar.dart';
->>>>>>> Stashed changes
+
 import '../base/button/buttons.dart';
 
 void main() {
@@ -49,12 +47,6 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       SizedBox(height: 50,),
                       Buttons()
-                      //ButtonWidget(
-                      // label: 'Chest', // 버튼에 표시될 텍스트
-                      //onPressed: () {
-                      //print('Button clicked!');
-                      //},
-                      //),
                     ],
                   ),
                 ],
@@ -63,7 +55,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
-<<<<<<< Updated upstream
+
     );
   }
 }
@@ -110,9 +102,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
     );
-=======
-      bottomNavigationBar: BottomNavBar()
-      );
->>>>>>> Stashed changes
+
   }
 }
