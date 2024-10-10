@@ -49,11 +49,6 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void navigateToFirstScreen() {
-
-
-
-
-
     setState(() {
       _selectedIndex = 3; // FirstScreen으로 변경
     });
@@ -63,6 +58,11 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     // HomeScreen에 navigateToFirstScreen 전달
     return Scaffold(
+
+
+
+
+
       body: appScreens[_selectedIndex],
       bottomNavigationBar: BottomNavBar(
         onTap: _onItemTapped,
