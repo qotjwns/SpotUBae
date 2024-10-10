@@ -66,6 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
+<<<<<<< Updated upstream
       body: Column(
         children: [
           const SizedBox(height: 100,),
@@ -86,6 +87,14 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           )
         ],
+=======
+
+
+      body: appScreens[_selectedIndex],
+      bottomNavigationBar: BottomNavBar(
+        onTap: _onItemTapped,
+        selectedIndex: _selectedIndex,
+>>>>>>> Stashed changes
       ),
     );
   }
