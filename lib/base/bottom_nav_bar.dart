@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:group_app/screen/home_screen.dart';
+import 'package:group_app/screen/my_routine_screen.dart';
+
+import '../screen/home_screen.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
@@ -11,7 +13,7 @@ class BottomNavBar extends StatefulWidget {
 class _BottomNavBarState extends State<BottomNavBar> {
   final appScreens = [
     const Text("Calendar"),
-    const HomeScreen(),
+    const MyRoutineScreen(),
     const Text("Profile"),
   ];
   int _indexSelected = 1;
