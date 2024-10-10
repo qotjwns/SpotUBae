@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:group_app/screen/calendar_screen.dart';
 import 'package:group_app/screen/my_routine_screen.dart';
 
 import '../screen/home_screen.dart';
@@ -12,10 +13,10 @@ class BottomNavBar extends StatefulWidget {
 
 class _BottomNavBarState extends State<BottomNavBar> {
   final appScreens = [
-    const Text("Calendar"),
+    const CalendarScreen(),
+    const HomeScreen(),
     const MyRoutineScreen(),
-    const Text("Profile"),
-  ];
+  ];                          //메인화면 컨트롤
   int _indexSelected = 1;
 
   void _onTappedItem(int index) {
