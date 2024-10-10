@@ -3,6 +3,11 @@ import '../screen/home_screen.dart'; // HomeScreen을 사용하고 있습니다.
 
 
 
+
+
+
+
+
 class BottomNavBar extends StatefulWidget {
   final Function(int) onTap; // 탭 클릭 시 호출되는 함수
   final int selectedIndex; // 현재 선택된 인덱스
