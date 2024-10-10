@@ -8,10 +8,6 @@ void main() {
   runApp(const MyApp());
 }
 
-
-
-
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -53,6 +49,11 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void navigateToFirstScreen() {
+
+
+
+
+
     setState(() {
       _selectedIndex = 3; // FirstScreen으로 변경
     });

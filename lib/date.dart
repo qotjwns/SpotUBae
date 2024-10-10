@@ -4,9 +4,6 @@ import 'package:intl/intl.dart';
 class Date extends StatelessWidget {
 
 
-
-
-
   Date({super.key});
   final now = DateTime.now();
   String formattedDate = DateFormat('yy.MM.dd').format(DateTime.now());
