@@ -49,6 +49,11 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void navigateToFirstScreen() {
+
+
+
+
+
     setState(() {
       _selectedIndex = 3; // FirstScreen으로 변경
     });
