@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../screen/first_screen.dart';
 import '../screen/home_screen.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -60,7 +61,7 @@ class LoginScreen extends StatelessWidget {
                     // 잘못된 비밀번호 텍스트 클릭 시 동작
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()),
+                      MaterialPageRoute(builder: (context) => FirstScreen()),
                     );
                   },
                   child: const Text(

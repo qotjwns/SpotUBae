@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:group_app/base/bottom_nav_bar.dart';
+import 'package:group_app/date.dart';
 import 'package:group_app/login/login_screen.dart';
-import 'package:group_app/screen/first_screen.dart';
-import 'package:group_app/screen/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,6 +10,7 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -25,48 +25,67 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MainScreen extends StatefulWidget {
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
+
+  // This widget is the home page of your application. It is stateful, meaning
+  // that it has a State object (defined below) that contains fields that affect
+  // how it looks.
+
+  // This class is the configuration for the state. It holds the values (in this
+  // case the title) provided by the parent (in this case the App widget) and
+  // used by the build method of the State. Fields in a Widget subclass are
+  // always marked "final".
+
+  final String title;
+
   @override
-  _MainScreenState createState() => _MainScreenState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 1; // 초기 선택 인덱스
+class _MyHomePageState extends State<MyHomePage> {
+  int _counter = 0;
 
-  final List<Widget> appScreens = [
-    const Center(child: Text("Calendar")),
-    const HomeScreen(),
-    const Center(child: Text("Account")),
-    const FirstScreen()
-  ];
-
-  void _onItemTapped(int index) {
-    if (index >= 0 && index < appScreens.length) {
-      setState(() {
-        _selectedIndex = index; // 선택된 인덱스 업데이트
-      });
-    }
-  }
-
-  void navigateToFirstScreen() {
+  void _incrementCounter() {
     setState(() {
-      _selectedIndex = 3; // FirstScreen으로 변경
+      // This call to setState tells the Flutter framework that something has
+      // changed in this State, which causes it to rerun the build method below
+      // so that the display can reflect the updated values. If we changed
+      // _counter without calling setState(), then the build method would not be
+      // called again, and so nothing would appear to happen.
+      _counter++;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // HomeScreen에 navigateToFirstScreen 전달
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
+    //
+    // The Flutter framework has been optimized to make rerunning build methods
+    // fast, so that you can just rebuild anything that needs updating rather
+    // than having to individually change instances of widgets.
     return Scaffold(
-
-
-
-
-
-      body: appScreens[_selectedIndex],
-      bottomNavigationBar: BottomNavBar(
-        onTap: _onItemTapped,
-        selectedIndex: _selectedIndex,
+      body: Column(
+        children: [
+          const SizedBox(height: 100,),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal : 20),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('TODAY\'s WORKOUT', style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),),
+              ],
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end
+            ,
+            children: [
+              Date(),
+            ],
+          )
+        ],
       ),
     );
   }
