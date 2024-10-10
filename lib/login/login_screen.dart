@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
-import '../screen/first_screen.dart';
+import 'package:group_app/base/bottom_nav_bar.dart';
 import '../screen/home_screen.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -44,7 +43,7 @@ class LoginScreen extends StatelessWidget {
               const SizedBox(height: 25),
               ElevatedButton(
                 onPressed: () {
-                  const HomeScreen();
+                  const BottomNavBar();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
