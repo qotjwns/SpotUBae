@@ -61,7 +61,7 @@ class LoginScreen extends StatelessWidget {
                     // 잘못된 비밀번호 텍스트 클릭 시 동작
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => FirstScreen()),
+                      MaterialPageRoute(builder: (context) => const HomeScreen()),
                     );
                   },
                   child: const Text(
