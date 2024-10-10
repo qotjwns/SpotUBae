@@ -3,7 +3,9 @@ import 'package:group_app/date.dart';
 import 'package:group_app/login/login_screen.dart';
 import 'package:intl/intl.dart';
 
+
 import '../base/button/button_widget.dart';
+
 import '../base/button/buttons.dart';
 
 void main() {
@@ -45,12 +47,6 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       SizedBox(height: 50,),
                       Buttons()
-                      //ButtonWidget(
-                      // label: 'Chest', // 버튼에 표시될 텍스트
-                      //onPressed: () {
-                      //print('Button clicked!');
-                      //},
-                      //),
                     ],
                   ),
                 ],
@@ -59,6 +55,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
+
     );
   }
 }
@@ -105,5 +102,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
     );
+
   }
 }
