@@ -11,6 +11,7 @@ class FirstScreen extends StatelessWidget {
     String formattedDate = DateFormat('yyyy-MM-dd').format(now);
 
     return Scaffold(
+      appBar: AppBar(),
       body: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
