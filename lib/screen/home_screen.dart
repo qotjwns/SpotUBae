@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:group_app/base/bottom_nav_bar.dart';
 import 'package:group_app/date.dart';
 import 'package:group_app/login/login_screen.dart';
 import 'package:intl/intl.dart';
@@ -9,17 +10,13 @@ import '../base/button/button_widget.dart';
 import '../base/button/buttons.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     DateTime now = DateTime.now();
     String formattedDate = DateFormat('yyyy-MM-dd').format(now);
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
+    return Scaffold(
         body: Container(
           padding: const EdgeInsets.symmetric(horizontal : 20),
           child: Column(
@@ -42,7 +39,7 @@ class HomeScreen extends StatelessWidget {
                   const Column(
                     children: [
                       SizedBox(height: 50,),
-                      Buttons()
+                      Text("main page")
                     ],
                   ),
                 ],
@@ -50,9 +47,9 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
         ),
-      ),
-
-    );
+      );
   }
+
+  const HomeScreen({super.key});
 }
 
