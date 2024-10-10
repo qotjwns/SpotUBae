@@ -58,6 +58,11 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     // HomeScreen에 navigateToFirstScreen 전달
     return Scaffold(
+
+
+
+
+
       body: appScreens[_selectedIndex],
       bottomNavigationBar: BottomNavBar(
         onTap: _onItemTapped,
