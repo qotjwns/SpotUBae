@@ -17,7 +17,6 @@ class _BottomNavBarState extends State<BottomNavBar> {
     const CalendarScreen(),
     const HomeScreen(),
     const AccountScreen(),
-    const MyRoutineScreen(),
   ];                          //메인화면 컨트롤
   int _indexSelected = 1;
 
