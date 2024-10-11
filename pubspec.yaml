@@ -62,10 +62,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/muscle mass.png
-    - assets/images/weight.png
-    - assets/images/body fat.png
-    - assets/images/exit.png
+    - assets/images/
 
 
   # To add assets to your application, add an assets section, like this:

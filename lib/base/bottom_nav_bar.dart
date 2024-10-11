@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:group_app/screen/calendar_screen.dart';
-import 'package:group_app/screen/my_routine_screen.dart';
 
 import '../screen/account.dart';
 import '../screen/home_screen.dart';
@@ -17,7 +16,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
     const CalendarScreen(),
     const HomeScreen(),
     const AccountScreen(),
-  ];                          //메인화면 컨트롤
+  ]; //메인화면 컨트롤
   int _indexSelected = 1;
 
   void _onTappedItem(int index) {
@@ -31,7 +30,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
     return Scaffold(
         body: appScreens[_indexSelected],
         bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _indexSelected,
+            currentIndex: _indexSelected,
             onTap: _onTappedItem,
             selectedItemColor: Colors.black,
             items: const [

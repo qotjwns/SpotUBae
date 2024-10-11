@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // SystemNavigator.pop()을 사용하기 위함
+import 'package:flutter/services.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -188,6 +188,9 @@ class NumberInputField extends StatelessWidget {
       decoration: const InputDecoration(
         border: InputBorder.none,
       ),
+      onChanged: (value){
+
+      },
     );
   }
 }

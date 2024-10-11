@@ -14,7 +14,7 @@ class Buttons extends StatelessWidget {
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.black,
-            foregroundColor: Colors.white,// 배경색 검정색
+            foregroundColor: Colors.white, // 배경색 검정색
             minimumSize: Size(300, 50), // 버튼 크기 설정
           ),
           child: const Text('CHEST'),
@@ -27,9 +27,9 @@ class Buttons extends StatelessWidget {
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.black,
-            foregroundColor: Colors.white,// 배경색 검정색
+            foregroundColor: Colors.white, // 배경색 검정색
             minimumSize: Size(300, 50), // 버튼 크기 설정
-        ),
+          ),
           child: const Text('BACK'),
         ),
         const SizedBox(height: 20),
@@ -40,7 +40,7 @@ class Buttons extends StatelessWidget {
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.black,
-            foregroundColor: Colors.white,// 배경색 검정색
+            foregroundColor: Colors.white, // 배경색 검정색
             minimumSize: Size(300, 50), // 버튼 크기 설정
           ),
           child: const Text('SHOULDER'),
@@ -53,7 +53,7 @@ class Buttons extends StatelessWidget {
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.black,
-            foregroundColor: Colors.white,// 배경색 검정색
+            foregroundColor: Colors.white, // 배경색 검정색
             minimumSize: Size(300, 50), // 버튼 크기 설정
           ),
           child: const Text('LEGS'),
@@ -66,7 +66,7 @@ class Buttons extends StatelessWidget {
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.black,
-            foregroundColor: Colors.white,// 배경색 검정색
+            foregroundColor: Colors.white, // 배경색 검정색
             minimumSize: Size(300, 50), // 버튼 크기 설정
           ),
           child: const Text('ARMS'),
@@ -92,7 +92,7 @@ class Buttons extends StatelessWidget {
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.black,
-            foregroundColor: Colors.white,// 배경색 검정색
+            foregroundColor: Colors.white, // 배경색 검정색
             minimumSize: const Size(300, 50), // 버튼 크기 설정
           ),
           child: const Text('CARDIO'),
