@@ -31,17 +31,17 @@ class FirstScreen extends StatelessWidget {
               children: [
                 Text(
                   formattedDate,
-                  style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 25, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 50),
             const Buttons(), // 기존 버튼 사용
+
           ],
         ),
       ),
     );
   }
-
-
 }

@@ -17,38 +17,71 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Flutter 달력 예시'),
+        title: const Text("Check your log"),
       ),
-      body: Column(
-        children: [
-          TableCalendar(
-            focusedDay: _focusedDay,
-            headerStyle: HeaderStyle(formatButtonVisible: false, titleCentered: true),
-            firstDay: DateTime.utc(2010, 1, 1),
-            lastDay: DateTime.utc(2030, 12, 31),
-            calendarFormat: _calendarFormat,
-            selectedDayPredicate: (day) {
-              return isSameDay(_selectedDay, day);
-            },
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDay = selectedDay;
-                _focusedDay = focusedDay;
-              });
-            },
-            onFormatChanged: (format) {
-              if (_calendarFormat != format) {
-                setState(() {
-                  _calendarFormat = format;
-                });
-              }
-            },
-            onPageChanged: (focusedDay) {
+      body: Column(children: [
+        TableCalendar(
+          headerStyle: const HeaderStyle(
+              formatButtonVisible: false, titleCentered: true),
+          focusedDay: _focusedDay,
+          firstDay: DateTime.utc(2010, 1, 1),
+          lastDay: DateTime.utc(2030, 12, 31),
+          calendarFormat: _calendarFormat,
+          selectedDayPredicate: (day) {
+            return isSameDay(_selectedDay, day);
+          },
+          onDaySelected: (selectedDay, focusedDay) {
+            setState(() {
+              _selectedDay = selectedDay;
               _focusedDay = focusedDay;
-            },
-          ),
-        ],
-      ),
+            });
+          },
+          onFormatChanged: (format) {
+            if (_calendarFormat != format) {
+              setState(() {
+                _calendarFormat = format;
+              });
+            }
+          },
+          onPageChanged: (focusedDay) {
+            _focusedDay = focusedDay;
+          },
+        ),
+        Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Table(
+              border: const TableBorder(
+                horizontalInside: BorderSide(
+                  width: 2, // 가로줄 두께
+                  color: Colors.grey, // 가로줄 색상
+                  style: BorderStyle.solid,
+                ),
+                verticalInside: BorderSide(
+                  width: 2, // 가로줄 두께
+                  color: Colors.grey, // 가로줄 색상
+                  style: BorderStyle.solid,
+                ),
+              ),
+              children: const [
+                TableRow(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Center(
+                          child: Text('Exercise  log',
+                              style: TextStyle(fontSize: 20))),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Center(
+                          child:
+                              Text('Diet log', style: TextStyle(fontSize: 20))),
+                    ),
+                  ],
+                ),
+              ],
+            ))
+      ]),
     );
   }
 }
