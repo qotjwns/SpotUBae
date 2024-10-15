@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:group_app/screen/make_routine.dart';
 
 class Buttons extends StatelessWidget {
   const Buttons({super.key});
@@ -10,7 +11,10 @@ class Buttons extends StatelessWidget {
         ElevatedButton(
           onPressed: () {
             // 버튼 1 클릭 시 동작
-            print('Button 1 Pressed');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder:(context) => MakeRoutine()),
+            );
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.black,
