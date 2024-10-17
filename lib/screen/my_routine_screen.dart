@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:group_app/screen/performance.dart';
 
 class MyRoutineScreen extends StatelessWidget {
   const MyRoutineScreen({super.key});
@@ -85,6 +86,10 @@ class MyRoutineScreen extends StatelessWidget {
                 ),
                 ElevatedButton(
                   onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder:(context) => Performance()),
+                    );
                     // Finish 버튼 클릭 시 동작할 내용
                   },
                   child: const Text("Finish",

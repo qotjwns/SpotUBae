@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:group_app/screen/my_routine_screen.dart';
 
 
 class MakeRoutine extends StatelessWidget{
@@ -136,10 +137,33 @@ class MakeRoutine extends StatelessWidget{
                             style: TextStyle(fontSize:15, fontWeight: FontWeight.bold, ))),
                   ),
               ],
-      ),
-    ),
-      ),
-    ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 300),
+
+          Column(
+            children: [
+              SizedBox(
+                width: 90,
+                height: 50,
+                child: ElevatedButton(
+                    onPressed:() {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder:(context) => MyRoutineScreen()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Finish',
+                        style: TextStyle(fontSize:15, fontWeight: FontWeight.bold, ))),
+              )
+            ],
+          )
+          ],
       ),
     );
   }
