@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:group_app/widgets/button_widget.dart';
 
 class PredefinedMessages extends StatelessWidget {
   final List<String> predefinedMessages;
@@ -16,12 +17,10 @@ class PredefinedMessages extends StatelessWidget {
       padding: const EdgeInsets.all(8.0),
       color: Colors.white,
       child: Wrap(
-        spacing: 8.0,
-        runSpacing: 4.0,
         children: predefinedMessages.map((message) {
-          return ElevatedButton(
+          return ButtonWidget(
             onPressed: () => onMessageSelected(message),
-            child: Text(message),
+            label: message
           );
         }).toList(),
       ),
