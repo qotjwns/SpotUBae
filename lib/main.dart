@@ -1,32 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:group_app/base/bottom_nav_bar.dart';
-import 'package:group_app/login/login_screen.dart';
-import 'package:group_app/screen/home_screen.dart';
-import 'package:group_app/screen/home_screen.dart';
+import 'package:group_app/screens/screen_controller/controller.dart';
+import 'package:group_app/services/user_data_manage_service.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserDataManageService()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
+      title: 'Fitness Chatbot',
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const BottomNavBar(),
+      home: Controller(),
     );
   }
 }
-
-
-
-
-
