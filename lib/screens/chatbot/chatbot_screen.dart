@@ -65,13 +65,6 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
 
     _saveMessages();
   }
-  void _navigateToMakeMyRoutine() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const MakeMyRoutineScreen(),
-      ),
-    );
-  }
 
   void _sendPredefinedMessage(String messageContent) {
     final userMessage = Message(
@@ -147,25 +140,6 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     });
   }
 
-  void _resetChat() async {
-    bool confirm = await showConfirmationDialog(
-      context,
-      '채팅 초기화',
-      '채팅 내용을 모두 삭제하시겠습니까?',
-    );
-
-    if (confirm) {
-      await _storageService.deleteMessages(widget.workoutType);
-      setState(() {
-        _messages.clear();
-        _addWelcomeMessage();
-      });
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('채팅이 초기화되었습니다.')),
-      );
-    }
-  }
 
   @override
   void dispose() {
