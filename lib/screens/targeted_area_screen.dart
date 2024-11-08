@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/button_widget.dart';
-import 'chatbot_screen.dart';
+import 'chatbot/chatbot_screen.dart';
 
 class TargetedAreaScreen extends StatelessWidget {
   const TargetedAreaScreen({super.key});

@@ -1,7 +1,10 @@
 // lib/screens/make_my_routine_screen.dart
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import '../models/exercise.dart';
+import '../services/routine_storage_service.dart';
+import '../widgets/exercise_input.dart';
+import '../widgets/exercise_list_item.dart';
+
 
 class MakeMyRoutineScreen extends StatefulWidget {
   const MakeMyRoutineScreen({super.key});
@@ -11,10 +14,12 @@ class MakeMyRoutineScreen extends StatefulWidget {
 }
 
 class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
-  final List<Map<String, dynamic>> _exercises = [];
+  final List<Exercise> _exercises = [];
   final TextEditingController _exerciseController = TextEditingController();
   final TextEditingController _setsController = TextEditingController();
   final TextEditingController _repsController = TextEditingController();
+
+  final RoutineStorageService _storageService = RoutineStorageService();
 
   @override
   void initState() {
@@ -31,13 +36,10 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   }
 
   Future<void> _loadRoutine() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? routineJson = prefs.getString('my_routine');
-    if (routineJson != null) {
-      setState(() {
-        _exercises.addAll(List<Map<String, dynamic>>.from(json.decode(routineJson)));
-      });
-    }
+    List<Exercise> loadedExercises = await _storageService.loadRoutine();
+    setState(() {
+      _exercises.addAll(loadedExercises);
+    });
   }
 
   void _addExercise() {
@@ -63,11 +65,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
     }
 
     setState(() {
-      _exercises.add({
-        'name': exerciseName,
-        'sets': sets,
-        'reps': reps,
-      });
+      _exercises.add(Exercise(name: exerciseName, sets: sets, reps: reps));
       _exerciseController.clear();
       _setsController.clear();
       _repsController.clear();
@@ -81,8 +79,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   }
 
   Future<void> _saveRoutine() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('my_routine', json.encode(_exercises));
+    await _storageService.saveRoutine(_exercises);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('루틴이 저장되었습니다!')),
@@ -90,11 +87,11 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   }
 
   Future<void> _clearRoutine() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('my_routine');
+    await _storageService.clearRoutine();
     setState(() {
       _exercises.clear();
     });
+
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('루틴이 초기화되었습니다.')),
@@ -126,43 +123,11 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            TextField(
-              controller: _exerciseController,
-              decoration: const InputDecoration(
-                labelText: '운동 이름',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _setsController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: '세트 수',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextField(
-                    controller: _repsController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: '반복 횟수',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _addExercise,
-                  child: const Text('추가'),
-                ),
-              ],
+            ExerciseInput(
+              nameController: _exerciseController,
+              setsController: _setsController,
+              repsController: _repsController,
+              onAdd: _addExercise,
             ),
             const SizedBox(height: 20),
             Expanded(
@@ -172,20 +137,10 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                 itemCount: _exercises.length,
                 itemBuilder: (context, index) {
                   final exercise = _exercises[index];
-                  return Card(
-                    elevation: 2,
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        child: Text('${index + 1}'),
-                      ),
-                      title: Text(exercise['name']),
-                      subtitle: Text(
-                          '${exercise['sets']} 세트 x ${exercise['reps']} 회'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => _removeExercise(index),
-                      ),
-                    ),
+                  return ExerciseListItem(
+                    exercise: exercise,
+                    index: index,
+                    onDelete: () => _removeExercise(index),
                   );
                 },
               ),
