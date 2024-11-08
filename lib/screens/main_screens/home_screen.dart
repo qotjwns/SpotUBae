@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../choose_workout_screen.dart';
+import 'package:group_app/screens/targeted_area_screen.dart';
 import '../../widgets/table_cell_content.dart';
 import '../../widgets/button_widget.dart';
 
@@ -28,7 +28,7 @@ class HomeScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => const ChooseWorkoutScreen(),
+                      builder: (context) => const TargetedAreaScreen(),
                     ),
                   );
                 },

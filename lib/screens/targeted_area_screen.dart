@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../widgets/button_widget.dart';
 import 'chatbot_screen.dart';
 
-class ChooseWorkoutScreen extends StatelessWidget {
-  const ChooseWorkoutScreen({super.key});
+class TargetedAreaScreen extends StatelessWidget {
+  const TargetedAreaScreen({super.key});
 
   void _navigateToChatBot(BuildContext context, String workoutType) {
     Navigator.of(context).push(

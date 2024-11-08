@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/message.dart';
 import '../services/api_service.dart';
 import '../services/chat_bot_storage_service.dart';
+import 'make_my_routine_screen.dart';
 
 class ChatBotScreen extends StatefulWidget {
   final String workoutType;
@@ -210,6 +211,13 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     super.dispose();
   }
 
+  void _navigateToMakeMyRoutine() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const MakeMyRoutineScreen(),
+      ),
+    );
+  }
   void _resetChat() async {
     bool confirm = await _showConfirmationDialog(
       context,
@@ -234,7 +242,13 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.workoutType} 챗봇'),
-        actions: [IconButton(onPressed: _resetChat, icon: Icon(Icons.refresh))],
+        actions: [
+          IconButton(onPressed: _resetChat, icon: Icon(Icons.refresh)),
+          IconButton(
+            icon: const Icon(Icons.fitness_center),
+            onPressed: _navigateToMakeMyRoutine,
+          ),
+        ],
       ),
       body: Column(
         children: [

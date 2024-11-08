@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../models/message.dart';
 import '../../services/api_service.dart';
 import '../../services/chat_bot_storage_service.dart';
-import 'confirmation_dialog.dart';
 import 'message_bubble.dart';
 import 'predefined_messages.dart';
 
@@ -139,25 +138,6 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     });
   }
 
-  void _resetChat() async {
-    bool confirm = await showConfirmationDialog(
-      context,
-      '채팅 초기화',
-      '채팅 내용을 모두 삭제하시겠습니까?',
-    );
-
-    if (confirm) {
-      await _storageService.deleteMessages(widget.workoutType);
-      setState(() {
-        _messages.clear();
-        _addWelcomeMessage();
-      });
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('채팅이 초기화되었습니다.')),
-      );
-    }
-  }
 
   @override
   void dispose() {
@@ -168,15 +148,6 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('${widget.workoutType} 챗봇'),
-        actions: [
-          IconButton(
-            onPressed: _resetChat,
-            icon: const Icon(Icons.refresh),
-          )
-        ],
-      ),
       body: Column(
         children: [
           Expanded(
