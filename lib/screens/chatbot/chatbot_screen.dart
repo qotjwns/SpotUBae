@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:group_app/widgets/button_widget.dart';
 import '../../models/message.dart';
 import '../../services/api_service.dart';
 import '../../services/chat_bot_storage_service.dart';
-import 'message_bubble.dart';
-import 'predefined_messages.dart';
+import '../make_my_routine_screen.dart';
 
 class ChatBotScreen extends StatefulWidget {
   final String workoutType;
@@ -11,10 +11,10 @@ class ChatBotScreen extends StatefulWidget {
   const ChatBotScreen({super.key, required this.workoutType});
 
   @override
-  State<ChatBotScreen> createState() => _ChatBotScreenState();
+  ChatBotScreenState createState() => ChatBotScreenState();
 }
 
-class _ChatBotScreenState extends State<ChatBotScreen> {
+class ChatBotScreenState extends State<ChatBotScreen> {
   final List<Message> _messages = [];
   final ScrollController _scrollController = ScrollController();
   final ChatBotStorageService _storageService = ChatBotStorageService();
@@ -27,19 +27,20 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     'for pre-intermediate',
     'for intermediate',
     'for upper-intermediate',
-    'for expert',
+    'for expert'
   ];
 
   @override
   void initState() {
     super.initState();
-    _apiService = ApiService(apiKey: 'YOUR_API_KEY'); // 실제 API 키는 안전하게 관리하세요.
+    _apiService = ApiService(
+        apiKey: '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');
     _loadMessages();
   }
 
   Future<void> _loadMessages() async {
     List<Message> loadedMessages =
-    await _storageService.loadMessages(widget.workoutType);
+        await _storageService.loadMessages(widget.workoutType);
     setState(() {
       _messages.addAll(loadedMessages);
     });
@@ -51,8 +52,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
 
   void _addWelcomeMessage() {
     final welcomeMessage = Message(
-      content:
-      '${widget.workoutType} 챗봇에 오신 것을 환영합니다! 운동 관련 질문을 해보세요.',
+      content: '${widget.workoutType} 챗봇에 오신 것을 환영합니다! 운동 관련 질문을 해보세요.',
       timestamp: DateTime.now(),
       role: 'assistant',
     );
@@ -68,7 +68,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     final userMessage = Message(
       role: 'user',
       content:
-      "A set of events for $messageContent ${widget.workoutType} exercise routines, repeat the number of repetitions, and just summarize the break time. Take out what you don't need in the middle, note, introduction",
+          "A set of events for $messageContent ${widget.workoutType} exercise routines, repeat the number of repetitions, and just summarize the break time. Take out what you don't need in the middle, note, introduction",
       timestamp: DateTime.now(),
     );
 
@@ -138,6 +138,73 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     });
   }
 
+  Widget _buildPredefinedMessages() {
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      color: Colors.white,
+      child: Wrap(
+        spacing: 8.0,
+        runSpacing: 4.0,
+        children: _predefinedMessages.map((message) {
+          return ButtonWidget(
+            onPressed: () => _sendPredefinedMessage(message),
+            label: message,
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildMessage(Message message) {
+    return Align(
+      alignment:
+          message.role == 'user' ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color:
+              message.role == 'user' ? Colors.blueAccent : Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          message.content,
+          style: TextStyle(
+            color: message.role == 'user' ? Colors.white : Colors.black,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<bool> _showConfirmationDialog(
+      BuildContext context, String title, String content) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(title),
+              content: Text(content),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('예'),
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                ),
+                TextButton(
+                  child: const Text('아니오'),
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+  }
 
   @override
   void dispose() {
@@ -145,9 +212,46 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     super.dispose();
   }
 
+  void _navigateToMakeMyRoutine() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const MakeMyRoutineScreen(),
+      ),
+    );
+  }
+
+  void _resetChat() async {
+    bool confirm = await _showConfirmationDialog(
+      context,
+      '채팅 초기화',
+      '채팅 내용을 모두 삭제하시겠습니까?',
+    );
+
+    if (confirm) {
+      await _storageService.deleteMessages(widget.workoutType);
+      setState(() {
+        _messages.clear();
+        _addWelcomeMessage();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('채팅이 초기화되었습니다.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('${widget.workoutType} 챗봇'),
+        actions: [
+          IconButton(onPressed: _resetChat, icon: Icon(Icons.refresh)),
+          IconButton(
+            icon: const Icon(Icons.fitness_center),
+            onPressed: _navigateToMakeMyRoutine,
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
@@ -155,15 +259,12 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
               controller: _scrollController,
               itemCount: _messages.length,
               itemBuilder: (context, index) {
-                return MessageBubble(message: _messages[index]);
+                return _buildMessage(_messages[index]);
               },
             ),
           ),
           if (_isLoading) const CircularProgressIndicator(),
-          PredefinedMessages(
-            predefinedMessages: _predefinedMessages,
-            onMessageSelected: _sendPredefinedMessage,
-          ),
+          _buildPredefinedMessages(),
         ],
       ),
     );

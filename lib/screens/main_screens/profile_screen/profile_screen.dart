@@ -46,7 +46,7 @@ class ProfileScreen extends StatelessWidget {
                         child: UserDataChart(
                           userDataList:
                           userDataManageService.userDataList,
-                          maxY: 200,
+                          maxY: 120,
                         ),
                       ),
                       const SizedBox(height: 20),

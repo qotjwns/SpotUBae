@@ -75,7 +75,7 @@ class UserDataChart extends StatelessWidget {
               interval: 20,
               reservedSize: 40,
               getTitlesWidget: (value, meta) {
-                double bodyFatValue = value / 2;
+                double bodyFatValue = value - 20;
                 return Text(
                   '${bodyFatValue.toInt()}%',
                   style: const TextStyle(fontSize: 10),
