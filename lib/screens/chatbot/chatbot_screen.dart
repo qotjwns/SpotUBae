@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../../models/message.dart';
 import '../../services/api_service.dart';
 import '../../services/chat_bot_storage_service.dart';
-import '../../widgets/confirmation_dialog.dart';
-import '../make_my_routine_screen.dart';
 import 'message_bubble.dart';
 import 'predefined_messages.dart';
 
