@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../../models/message.dart';
 import '../../services/api_service.dart';
 import '../../services/chat_bot_storage_service.dart';
-import 'confirmation_dialog.dart';
+import '../../widgets/confirmation_dialog.dart';
+import '../make_my_routine_screen.dart';
 import 'message_bubble.dart';
 import 'predefined_messages.dart';
 
@@ -63,6 +64,13 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     });
 
     _saveMessages();
+  }
+  void _navigateToMakeMyRoutine() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const MakeMyRoutineScreen(),
+      ),
+    );
   }
 
   void _sendPredefinedMessage(String messageContent) {
@@ -168,15 +176,6 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('${widget.workoutType} 챗봇'),
-        actions: [
-          IconButton(
-            onPressed: _resetChat,
-            icon: const Icon(Icons.refresh),
-          )
-        ],
-      ),
       body: Column(
         children: [
           Expanded(
