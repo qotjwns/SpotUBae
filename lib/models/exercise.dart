@@ -1,22 +1,42 @@
-// lib/models/exercise.dart
 class Exercise {
   final String name;
-  final int sets;
-  final int reps;
+  final List<Map<String, int>> sets; // 각 세트별로 무게와 횟수를 저장
+  final String recentRecord; // 최근 기록
+  final String recommendedRecord; // 추천 기록
 
-  Exercise({required this.name, required this.sets, required this.reps});
-
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'sets': sets,
-    'reps': reps,
-  };
+  Exercise({
+    required this.name,
+    this.sets = const [],
+    this.recentRecord = '0kg x 0회',
+    this.recommendedRecord = '0kg x 0회',
+  });
 
   factory Exercise.fromJson(Map<String, dynamic> json) {
     return Exercise(
-      name: json['name'],
-      sets: json['sets'],
-      reps: json['reps'],
+      name: json['name'] as String,
+      sets: (json['sets'] is List)
+          ? (json['sets'] as List).map((set) {
+        if (set is Map<String, dynamic>) {
+          return {
+            'weight': set['weight'] as int? ?? 0,
+            'reps': set['reps'] as int? ?? 0,
+          };
+        } else {
+          return {'weight': 0, 'reps': 0};
+        }
+      }).toList()
+          : [],
+      recentRecord: json['recentRecord'] as String? ?? '0kg x 0회',
+      recommendedRecord: json['recommendedRecord'] as String? ?? '0kg x 0회',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'sets': sets,
+      'recentRecord': recentRecord,
+      'recommendedRecord': recommendedRecord,
+    };
   }
 }
