@@ -1,10 +1,7 @@
-// lib/screens/make_my_routine_screen.dart
 import 'package:flutter/material.dart';
 import '../models/exercise.dart';
 import '../services/routine_storage_service.dart';
-import '../widgets/exercise_input.dart';
-import '../widgets/exercise_list_item.dart';
-
+import '../widgets/exercise_card.dart';
 
 class MakeMyRoutineScreen extends StatefulWidget {
   const MakeMyRoutineScreen({super.key});
@@ -15,10 +12,6 @@ class MakeMyRoutineScreen extends StatefulWidget {
 
 class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   final List<Exercise> _exercises = [];
-  final TextEditingController _exerciseController = TextEditingController();
-  final TextEditingController _setsController = TextEditingController();
-  final TextEditingController _repsController = TextEditingController();
-
   final RoutineStorageService _storageService = RoutineStorageService();
 
   @override
@@ -27,55 +20,39 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
     _loadRoutine();
   }
 
-  @override
-  void dispose() {
-    _exerciseController.dispose();
-    _setsController.dispose();
-    _repsController.dispose();
-    super.dispose();
-  }
-
   Future<void> _loadRoutine() async {
     List<Exercise> loadedExercises = await _storageService.loadRoutine();
     setState(() {
-      _exercises.addAll(loadedExercises);
+      if (loadedExercises.isEmpty) {
+        _exercises.add(Exercise(
+          name: "새 운동",
+          sets: [],
+          recentRecord: '20kg x 10회', // 초기값
+          recommendedRecord: '25kg x 10회', // 초기값
+        ));
+      } else {
+        _exercises.addAll(loadedExercises);
+      }
     });
   }
 
   void _addExercise() {
-    String exerciseName = _exerciseController.text.trim();
-    String setsText = _setsController.text.trim();
-    String repsText = _repsController.text.trim();
-
-    if (exerciseName.isEmpty || setsText.isEmpty || repsText.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('모든 필드를 입력해주세요.')),
-      );
-      return;
-    }
-
-    int? sets = int.tryParse(setsText);
-    int? reps = int.tryParse(repsText);
-
-    if (sets == null || reps == null || sets <= 0 || reps <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('유효한 세트 수와 반복 횟수를 입력해주세요.')),
-      );
-      return;
-    }
-
     setState(() {
-      _exercises.add(Exercise(name: exerciseName, sets: sets, reps: reps));
-      _exerciseController.clear();
-      _setsController.clear();
-      _repsController.clear();
+      _exercises.add(Exercise(
+        name: "새 운동",
+        sets: [],
+        recentRecord: '20kg x 10회',
+        recommendedRecord: '25kg x 10회',
+      ));
     });
+    _saveRoutine(); // 운동 항목이 추가될 때마다 저장
   }
 
   void _removeExercise(int index) {
     setState(() {
       _exercises.removeAt(index);
     });
+    _saveRoutine(); // 운동 항목이 삭제될 때마다 저장
   }
 
   Future<void> _saveRoutine() async {
@@ -86,67 +63,59 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
     );
   }
 
-  Future<void> _clearRoutine() async {
-    await _storageService.clearRoutine();
+  void _updateSets(int index, List<Map<String, int>> sets) {
     setState(() {
-      _exercises.clear();
+      _exercises[index] = Exercise(
+        name: _exercises[index].name,
+        sets: sets,
+        recentRecord: _exercises[index].recentRecord,
+        recommendedRecord: _exercises[index].recommendedRecord,
+      );
     });
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('루틴이 초기화되었습니다.')),
-    );
+    _saveRoutine(); // 세트가 수정될 때마다 저장
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Make My Routine'),
+        toolbarHeight: 80,
+        title: const Text('My Routine', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save),
+            icon: const Icon(Icons.save, size: 30,),
             onPressed: _saveRoutine,
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: _clearRoutine,
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const Text(
-              '운동 루틴을 작성하세요.',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            ExerciseInput(
-              nameController: _exerciseController,
-              setsController: _setsController,
-              repsController: _repsController,
-              onAdd: _addExercise,
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: _exercises.isEmpty
-                  ? const Center(child: Text('추가된 운동이 없습니다.'))
-                  : ListView.builder(
-                itemCount: _exercises.length,
-                itemBuilder: (context, index) {
-                  final exercise = _exercises[index];
-                  return ExerciseListItem(
-                    exercise: exercise,
-                    index: index,
-                    onDelete: () => _removeExercise(index),
-                  );
-                },
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _exercises.length,
+        itemBuilder: (context, index) {
+          final exercise = _exercises[index];
+          return Column(
+            children: [
+              ExerciseCard(
+                exercise: exercise,
+                onDelete: () => _removeExercise(index),
+                onSetsUpdated: (sets) => _updateSets(index, sets),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: _addExercise,
+                icon: const Icon(Icons.add, color: Colors.grey,),
+                label: const Text("Add", style: TextStyle(color: Colors.black),),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20), // 다음 카드와의 간격
+            ],
+          );
+        },
       ),
     );
   }
