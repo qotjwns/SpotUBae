@@ -10,14 +10,14 @@ class UserData {
   });
 
   Map<String, dynamic> toJson() => {
-        'date': date.toIso8601String(),
-        'weight': weight,
-        'bodyFat': bodyFat,
-      };
+    'date': date.toIso8601String(),
+    'weight': weight,
+    'bodyFat': bodyFat,
+  };
 
   factory UserData.fromJson(Map<String, dynamic> json) => UserData(
-        date: DateTime.parse(json['date']),
-        weight: json['weight'],
-        bodyFat: json['bodyFat'],
-      );
+    date: DateTime.parse(json['date']),
+    weight: json['weight'],
+    bodyFat: json['bodyFat'],
+  );
 }

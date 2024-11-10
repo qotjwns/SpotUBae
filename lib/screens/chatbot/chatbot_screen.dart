@@ -52,7 +52,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
 
   void _addWelcomeMessage() {
     final welcomeMessage = Message(
-      content: '${widget.workoutType} 챗봇에 오신 것을 환영합니다! 운동 관련 질문을 해보세요.',
+      content: '${widget.workoutType} Welcome to the Chatbot! Ask some workout-related questions.',
       timestamp: DateTime.now(),
       role: 'assistant',
     );
@@ -99,7 +99,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
       _saveMessages();
       _scrollToBottom();
     } catch (e) {
-      _addErrorMessage('챗봇 응답에 문제가 발생했습니다: $e');
+      _addErrorMessage('Problem with the chatbot response: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -188,13 +188,13 @@ class ChatBotScreenState extends State<ChatBotScreen> {
               content: Text(content),
               actions: <Widget>[
                 TextButton(
-                  child: const Text('예'),
+                  child: const Text('Yes'),
                   onPressed: () {
                     Navigator.of(context).pop(true);
                   },
                 ),
                 TextButton(
-                  child: const Text('아니오'),
+                  child: const Text('No'),
                   onPressed: () {
                     Navigator.of(context).pop(false);
                   },
@@ -223,8 +223,8 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   void _resetChat() async {
     bool confirm = await _showConfirmationDialog(
       context,
-      '채팅 초기화',
-      '채팅 내용을 모두 삭제하시겠습니까?',
+      'Chatting reset',
+      'Are you sure you want to delete all your chat?',
     );
 
     if (confirm) {
@@ -234,7 +234,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
         _addWelcomeMessage();
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('채팅이 초기화되었습니다.')),
+        SnackBar(content: Text('Chatting has been reset.')),
       );
     }
   }
@@ -243,7 +243,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.workoutType} 챗봇'),
+        title: Text('${widget.workoutType} Chatbot'),
         actions: [
           IconButton(onPressed: _resetChat, icon: Icon(Icons.refresh)),
           IconButton(

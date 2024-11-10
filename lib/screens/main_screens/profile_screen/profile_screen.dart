@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:group_app/screens/main_screens/profile_screen/user_data_chart.dart';
+import 'package:group_app/screens/main_screens/profile_screen/user_data_form.dart';
 import 'package:provider/provider.dart';
 import '../../../services/user_data_manage_service.dart';
-import 'user_data_form.dart';
-import 'user_data_chart.dart';
 import 'legend_item.dart';
 
 class ProfileScreen extends StatelessWidget {

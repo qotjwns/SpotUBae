@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:group_app/screens/screen_controller/controller.dart';
+import 'package:group_app/services/goal_manage_service.dart';
 import 'package:group_app/services/user_data_manage_service.dart';
 import 'package:provider/provider.dart';
 
@@ -9,6 +10,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserDataManageService()),
+        ChangeNotifierProvider(create: (_) => GoalManageService()),
       ],
       child: const MyApp(),
     ),
