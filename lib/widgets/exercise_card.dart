@@ -5,6 +5,7 @@ import '../models/exercise.dart';
 class ExerciseCard extends StatefulWidget {
   final Exercise exercise;
   final VoidCallback onDelete;
+  final VoidCallback onSave;
   final ValueChanged<List<Map<String, int>>> onSetsUpdated; // 세트 업데이트 콜백
 
   const ExerciseCard({
@@ -12,6 +13,7 @@ class ExerciseCard extends StatefulWidget {
     required this.exercise,
     required this.onDelete,
     required this.onSetsUpdated,
+    required this.onSave,
   });
 
   @override
@@ -91,9 +93,17 @@ class _ExerciseCardState extends State<ExerciseCard> {
                   widget.exercise.name,
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.black),
-                  onPressed: widget.onDelete,
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.save, color: Colors.black),
+                      onPressed: widget.onSave,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.black),
+                      onPressed: widget.onDelete,
+                    ),
+                  ],
                 ),
               ],
             ),
