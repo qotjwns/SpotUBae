@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:group_app/widgets/button_widget.dart';
 import '../../models/message.dart';
 import '../../services/api_service.dart';
-import '../../services/chat_bot_storage_service.dart';
-import '../make_my_routine_screen.dart';
+import '../../storage_service.dart';
+import '../workout_selection_screen.dart';
+
 
 class ChatBotScreen extends StatefulWidget {
-  final String workoutType;
+  final String workoutType;  // 운동 부위 (예: chest, back, shoulder 등)
 
   const ChatBotScreen({super.key, required this.workoutType});
 
@@ -17,7 +18,7 @@ class ChatBotScreen extends StatefulWidget {
 class ChatBotScreenState extends State<ChatBotScreen> {
   final List<Message> _messages = [];
   final ScrollController _scrollController = ScrollController();
-  final ChatBotStorageService _storageService = ChatBotStorageService();
+  final StorageService _storageService = StorageService();
   late ApiService _apiService;
 
   bool _isLoading = false;
@@ -36,17 +37,40 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     _apiService = ApiService(
         apiKey: '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');
     _loadMessages();
+    _loadExercises();  // 운동 종목을 불러오는 함수 호출
   }
 
   Future<void> _loadMessages() async {
-    List<Message> loadedMessages =
-        await _storageService.loadMessages(widget.workoutType);
+    List<Message> loadedMessages = await _storageService.loadMessages(widget.workoutType);
     setState(() {
       _messages.addAll(loadedMessages);
     });
 
     if (_messages.isEmpty) {
       _addWelcomeMessage();
+    }
+  }
+
+  Future<void> _loadExercises() async {
+    // 운동 부위에 맞는 운동 종목을 불러오기
+    List<String> loadedExercises = await _storageService.loadExercisesFromDownload(widget.workoutType);
+
+    if (loadedExercises.isNotEmpty) {
+      setState(() {
+        _messages.add(Message(
+          role: 'assistant',
+          content: "Loaded exercises: ${loadedExercises.join(", ")}",
+          timestamp: DateTime.now(),
+        ));
+      });
+    } else {
+      setState(() {
+        _messages.add(Message(
+          role: 'assistant',
+          content: "$widget.workoutType 운동 종목 파일이 존재하지 않습니다.",
+          timestamp: DateTime.now(),
+        ));
+      });
     }
   }
 
@@ -68,7 +92,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     final userMessage = Message(
       role: 'user',
       content:
-          "A set of events for $messageContent ${widget.workoutType} exercise routines, repeat the number of repetitions, and just summarize the break time. Take out what you don't need in the middle, note, introduction",
+      "A set of events for $messageContent ${widget.workoutType} exercise routines, repeat the number of repetitions, and just summarize the break time. Take out what you don't need in the middle, note, introduction",
       timestamp: DateTime.now(),
     );
 
@@ -86,29 +110,52 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   void _callChatBotAPI() async {
     try {
       final botResponse = await _apiService.sendMessage(_messages);
-      final botMessage = Message(
-        role: 'assistant',
-        content: botResponse,
-        timestamp: DateTime.now(),
-      );
+      if (mounted) {
+        setState(() {
+          final botMessage = Message(
+            role: 'assistant',
+            content: botResponse,
+            timestamp: DateTime.now(),
+          );
+          _messages.add(botMessage);
+          _isLoading = false;
+        });
+      }
 
-      setState(() {
-        _messages.add(botMessage);
-      });
-
-      _saveMessages();
-      _scrollToBottom();
+      handleWorkoutResponse(botResponse, widget.workoutType);  // 운동 종목 처리
     } catch (e) {
-      _addErrorMessage('Problem with the chatbot response: $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _addErrorMessage('Problem with the chatbot response: $e');
+        });
+      }
+    }
+  }
+
+  void handleWorkoutResponse(String response, String workoutType) async {
+    final StorageService storageService = StorageService();
+
+    // 운동 종목 추출
+    List<String> matchingExercises = storageService.extractMatchingExercises(response);
+
+    if (matchingExercises.isNotEmpty) {
+      // 겹치는 운동 종목 저장
+      await storageService.saveExercisesToDownload(matchingExercises, workoutType);
+      print("$workoutType 운동 종목이 성공적으로 저장되었습니다.");
+    } else {
+      print("$workoutType 운동 종목 추출 실패! 응답 내용: $response");
+    }
+
+    // recommendation 운동 종목 저장
+    if (workoutType == "recommendation") {
+      // recommendation 운동 종목을 별도로 저장할 경우
+      await storageService.saveExercisesToDownload(matchingExercises, "recommendation");
+      print("recommendation 운동 종목이 성공적으로 저장되었습니다.");
     }
   }
 
   void _saveMessages() {
-    _storageService.saveMessages(widget.workoutType, _messages);
+    _storageService.saveMessages(widget.workoutType, _messages);  // 운동 부위별로 메시지 저장
   }
 
   void _addErrorMessage(String error) {
@@ -158,13 +205,13 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   Widget _buildMessage(Message message) {
     return Align(
       alignment:
-          message.role == 'user' ? Alignment.centerRight : Alignment.centerLeft,
+      message.role == 'user' ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color:
-              message.role == 'user' ? Colors.blueAccent : Colors.grey.shade300,
+          message.role == 'user' ? Colors.blueAccent : Colors.grey.shade300,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
@@ -181,28 +228,28 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   Future<bool> _showConfirmationDialog(
       BuildContext context, String title, String content) async {
     return await showDialog<bool>(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text(title),
-              content: Text(content),
-              actions: <Widget>[
-                TextButton(
-                  child: const Text('Yes'),
-                  onPressed: () {
-                    Navigator.of(context).pop(true);
-                  },
-                ),
-                TextButton(
-                  child: const Text('No'),
-                  onPressed: () {
-                    Navigator.of(context).pop(false);
-                  },
-                ),
-              ],
-            );
-          },
-        ) ??
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(content),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Yes'),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+            TextButton(
+              child: const Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+          ],
+        );
+      },
+    ) ??
         false;
   }
 
@@ -212,10 +259,10 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     super.dispose();
   }
 
-  void _navigateToMakeMyRoutine() {
+  void _navigateToWorkoutSelectionScreen() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const MakeMyRoutineScreen(),
+        builder: (context) => const WorkoutSelectionScreen(),
       ),
     );
   }
@@ -248,7 +295,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
           IconButton(onPressed: _resetChat, icon: Icon(Icons.refresh)),
           IconButton(
             icon: const Icon(Icons.fitness_center),
-            onPressed: _navigateToMakeMyRoutine,
+            onPressed: _navigateToWorkoutSelectionScreen,
           ),
         ],
       ),
