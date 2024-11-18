@@ -1,3 +1,5 @@
+// storage_service.dart
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart';
@@ -8,36 +10,86 @@ class StorageService {
   static const platform = MethodChannel('com.example.group_app/download_path');  // MethodChannel 설정
 
   List<String> chestWorkouts = [
-    "Barbell Bench Press",
-    "Incline Barbell Press",
-    "Decline Barbell Press",
-    "Dumbbell Bench Press",
-    "Dumbbell Fly",
-    "Dumbbell Pullovers",
-    "Cable Fly",
-    "Cable Crossovers",
-    "Push-up",
-    "Dip",
-    "Chest Press Machine",
-    "Pec Deck Machine",
-    "Medicine Ball Push-ups",
-    "Chest Dip"
+    "Barbell Bench Press", "Incline Barbell Press", "Incline Dumbbell Press",
+    "Decline Barbell Press", "Dumbbell Bench Press", "Dumbbell Fly",
+    "Dumbbell Pullover", "Cable Fly", "Chest Fly", "Cable Crossovers",
+    "Push-up", "Dip", "Chest Press Machine", "Pec Deck Machine",
+    "Medicine Ball Push-ups", "Chest Dips", "Bench Press"
   ];
 
-  // 운동 종목을 추출하는 메서드
-  List<String> extractMatchingExercises(String response) {
-    List<String> matchingExercises = [];
+  List<String> backWorkouts = [
+    "Deadlift", "Pull-up", "Lat Pulldown", "Seated Row", "T-bar Row", "Superman",
+    "Bent-Over Row", "Bent-Over Barbell Row"
+  ];
 
-    for (var workout in chestWorkouts) {
-      if (response.toLowerCase().contains(workout.toLowerCase().trim())) {
+  List<String> shoulderWorkouts = [
+    "Overhead Press", "Lateral Raise", "Front Raise", "Arnold Press"
+  ];
+
+  List<String> legWorkouts = [
+    "Squat", "Leg Press", "Lunges", "Leg Curl", "Leg Extension"
+  ];
+
+  // 운동 부위에 맞는 운동 목록을 반환하는 메서드
+  List<String> getWorkoutsByCategory(String category) {
+    switch (category.toLowerCase()) {
+      case "chest":
+        return chestWorkouts;
+      case "back":
+        return backWorkouts;
+      case "shoulder":
+        return shoulderWorkouts;
+      case "legs":
+        return legWorkouts;
+      default:
+        return [];
+    }
+  }
+
+  // 텍스트를 정규화하는 헬퍼 메서드
+  String _normalizeText(String text) {
+    return text.toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9\s]'), ' ') // 알파벳, 숫자, 공백을 제외한 모든 문자를 공백으로 대체
+        .replaceAll(RegExp(r'\s+'), ' ') // 여러 개의 공백을 하나로 대체
+        .trim();
+  }
+
+  // 운동 종목을 추출하는 메서드
+  List<String> extractMatchingExercises(String response, String workoutCategory) {
+    List<String> matchingExercises = [];
+    List<String> categoryWorkouts = getWorkoutsByCategory(workoutCategory);
+
+    // 운동 종목 리스트를 길이가 긴 순서대로 정렬 (먼저 긴 종목명 매칭)
+    categoryWorkouts.sort((a, b) => b.length.compareTo(a.length));
+
+    // 응답 텍스트 정규화
+    String normalizedResponse = _normalizeText(response);
+    print("Normalized Response: $normalizedResponse"); // 디버깅용
+
+    for (var workout in categoryWorkouts) {
+      // 운동 이름 정규화
+      String normalizedWorkout = _normalizeText(workout);
+
+      // 운동 이름의 끝에 's'가 있으면 제거 (복수형 무시)
+      if (normalizedWorkout.endsWith('s')) {
+        normalizedWorkout = normalizedWorkout.substring(0, normalizedWorkout.length - 1);
+      }
+
+      // 복수형 처리: 운동 이름 끝에 's'가 있으면 허용
+      RegExp regExp = RegExp(r'\b' + RegExp.escape(normalizedWorkout) + r's?\b');
+
+      // 운동 이름이 응답에 포함되어 있는지 확인
+      if (regExp.hasMatch(normalizedResponse)) {
         matchingExercises.add(workout);
+        print("Matched Workout: $workout"); // 디버깅용
+
+        // 이미 매칭된 부분을 제거하여 중복 매칭 방지
+        normalizedResponse = normalizedResponse.replaceAll(regExp, '');
       }
     }
 
     return matchingExercises;
   }
-
-
 
   // 다운로드 디렉터리 경로를 가져오는 메서드
   Future<String> getDownloadDirectory() async {
@@ -70,10 +122,7 @@ class StorageService {
     }
   }
 
-
-
   // 저장된 운동 종목 불러오기 (운동 부위별로 불러오기)
-  // 운동 종목을 불러오는 메서드
   Future<List<String>> loadExercisesFromDownload(String workoutType) async {
     try {
       final downloadDir = await getDownloadDirectory();
@@ -87,6 +136,7 @@ class StorageService {
       if (await file.exists()) {
         final content = await file.readAsString();
         List<dynamic> jsonData = jsonDecode(content);
+        print("로드된 추천 운동 목록: ${jsonData.toString()}");  // 디버깅용
         return jsonData.map((e) => e.toString()).toList();
       } else {
         print("$workoutType 운동 종목 파일이 존재하지 않습니다.");
@@ -160,5 +210,21 @@ class StorageService {
     } catch (e) {
       print("Error deleting messages: $e");
     }
+  }
+
+  // 운동 종목을 마스터 리스트에 추가하는 메서드 (필요시 사용)
+  Future<void> addNewWorkouts(String workoutType, List<String> newWorkouts) async {
+    List<String> currentWorkouts = getWorkoutsByCategory(workoutType);
+
+    for (var workout in newWorkouts) {
+      if (!currentWorkouts.contains(workout)) {
+        currentWorkouts.add(workout);
+      }
+    }
+
+    // 업데이트된 운동 목록을 저장 (필요시 파일이나 데이터베이스에 다시 저장)
+    // 예를 들어, 운동 부위별 파일에 저장하거나 다른 방식으로 관리
+    // 여기서는 단순히 로그를 남깁니다.
+    print("Updated $workoutType workouts: $currentWorkouts");
   }
 }
