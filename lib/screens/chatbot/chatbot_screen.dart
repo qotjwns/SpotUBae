@@ -1,10 +1,11 @@
+// chat_bot_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:group_app/widgets/button_widget.dart';
 import '../../models/message.dart';
 import '../../services/api_service.dart';
 import '../../storage_service.dart';
 import '../workout_selection_screen.dart';
-
 
 class ChatBotScreen extends StatefulWidget {
   final String workoutType;  // 운동 부위 (예: chest, back, shoulder 등)
@@ -52,8 +53,8 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   }
 
   Future<void> _loadExercises() async {
-    // 운동 부위에 맞는 운동 종목을 불러오기
-    List<String> loadedExercises = await _storageService.loadExercisesFromDownload(widget.workoutType);
+    // recommendation 운동 목록 불러오기
+    List<String> loadedExercises = await _storageService.loadExercisesFromDownload("recommendation");
 
     if (loadedExercises.isNotEmpty) {
       setState(() {
@@ -67,7 +68,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
       setState(() {
         _messages.add(Message(
           role: 'assistant',
-          content: "$widget.workoutType 운동 종목 파일이 존재하지 않습니다.",
+          content: "recommendation 운동 종목 파일이 존재하지 않습니다.",
           timestamp: DateTime.now(),
         ));
       });
@@ -76,7 +77,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
 
   void _addWelcomeMessage() {
     final welcomeMessage = Message(
-      content: '${widget.workoutType} Welcome to the Chatbot! Ask some workout-related questions.',
+      content: '${_capitalize(widget.workoutType)} 부위 챗봇에 오신 것을 환영합니다! 운동 관련 질문을 해주세요.',
       timestamp: DateTime.now(),
       role: 'assistant',
     );
@@ -126,7 +127,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _addErrorMessage('Problem with the chatbot response: $e');
+          _addErrorMessage('챗봇 응답에 문제가 발생했습니다: $e');
         });
       }
     }
@@ -136,20 +137,20 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     final StorageService storageService = StorageService();
 
     // 운동 종목 추출
-    List<String> matchingExercises = storageService.extractMatchingExercises(response);
+    List<String> matchingExercises = storageService.extractMatchingExercises(response, workoutType);
 
     if (matchingExercises.isNotEmpty) {
-      // 겹치는 운동 종목 저장
+      // 운동 종목 저장 (해당 부위)
       await storageService.saveExercisesToDownload(matchingExercises, workoutType);
       print("$workoutType 운동 종목이 성공적으로 저장되었습니다.");
     } else {
       print("$workoutType 운동 종목 추출 실패! 응답 내용: $response");
     }
 
-    // recommendation 운동 종목 저장
-    if (workoutType == "recommendation") {
-      // recommendation 운동 종목을 별도로 저장할 경우
-      await storageService.saveExercisesToDownload(matchingExercises, "recommendation");
+    // recommendation 운동 종목 저장 (항상 "recommendation"으로 저장)
+    List<String> recommendationExercises = storageService.extractMatchingExercises(response, workoutType);
+    if (recommendationExercises.isNotEmpty) {
+      await storageService.saveExercisesToDownload(recommendationExercises, "recommendation");
       print("recommendation 운동 종목이 성공적으로 저장되었습니다.");
     }
   }
@@ -262,7 +263,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   void _navigateToWorkoutSelectionScreen() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const WorkoutSelectionScreen(),
+        builder: (context) => WorkoutSelectionScreen(workoutType: widget.workoutType,),
       ),
     );
   }
@@ -270,8 +271,8 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   void _resetChat() async {
     bool confirm = await _showConfirmationDialog(
       context,
-      'Chatting reset',
-      'Are you sure you want to delete all your chat?',
+      '채팅 초기화',
+      '모든 채팅을 삭제하시겠습니까?',
     );
 
     if (confirm) {
@@ -281,7 +282,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
         _addWelcomeMessage();
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Chatting has been reset.')),
+        SnackBar(content: Text('채팅이 초기화되었습니다.')),
       );
     }
   }
@@ -290,7 +291,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.workoutType} Chatbot'),
+        title: Text('${_capitalize(widget.workoutType)} 부위 챗봇'),
         actions: [
           IconButton(onPressed: _resetChat, icon: Icon(Icons.refresh)),
           IconButton(
@@ -316,4 +317,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
       ),
     );
   }
+
+  // 문자열의 첫 글자를 대문자로 변환
+  String _capitalize(String s) => s[0].toUpperCase() + s.substring(1);
 }
