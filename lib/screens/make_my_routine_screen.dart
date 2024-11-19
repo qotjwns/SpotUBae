@@ -1,20 +1,28 @@
+// lib/screens/make_my_routine_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/exercise.dart';
+import '../models/exercise_log.dart';
 import '../services/routine_storage_service.dart';
+import '../services/exercise_log_storage_service.dart'; // 추가
 import '../widgets/exercise_card.dart';
 
 class MakeMyRoutineScreen extends StatefulWidget {
-  const MakeMyRoutineScreen({super.key});
+  final List<Exercise>? initialExercises; // 초기 운동 리스트
+
+  const MakeMyRoutineScreen({Key? key, this.initialExercises}) : super(key: key);
 
   @override
   State<MakeMyRoutineScreen> createState() => _MakeMyRoutineScreenState();
 }
 
 class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
-  final List<Exercise> _exercises = [];
+  List<Exercise> _exercises = [];
   final RoutineStorageService _storageService = RoutineStorageService();
+  final ExerciseLogStorageService _logStorageService =
+  ExerciseLogStorageService(); // 추가
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   Duration _timerDuration = const Duration(minutes: 1);
@@ -28,19 +36,26 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   }
 
   Future<void> _loadRoutine() async {
-    List<Exercise> loadedExercises = await _storageService.loadRoutine();
-    setState(() {
-      if (loadedExercises.isEmpty) {
-        _exercises.add(Exercise(
-          name: "새 운동",
-          sets: [],
-          recentRecord: '20kg x 10회', // 초기값
-          recommendedRecord: '25kg x 10회', // 초기값
-        ));
-      } else {
-        _exercises.addAll(loadedExercises);
-      }
-    });
+    if (widget.initialExercises != null &&
+        widget.initialExercises!.isNotEmpty) {
+      setState(() {
+        _exercises = widget.initialExercises!;
+      });
+    } else {
+      List<Exercise> loadedExercises = await _storageService.loadRoutine();
+      setState(() {
+        if (loadedExercises.isEmpty) {
+          _exercises.add(Exercise(
+            name: "새 운동",
+            sets: [],
+            recentRecord: '20kg x 10회',
+            recommendedRecord: '25kg x 10회',
+          ));
+        } else {
+          _exercises.addAll(loadedExercises);
+        }
+      });
+    }
   }
 
   void _addExercise() {
@@ -62,10 +77,27 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
 
   Future<void> _saveAllExercises() async {
     await _storageService.saveRoutine(_exercises);
+    await _saveExerciseLog(); // 운동 기록 저장
+
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('모든 운동이 저장되었습니다!')),
     );
+
+    // 홈 화면으로 이동
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Future<void> _saveExerciseLog() async {
+    DateTime now = DateTime.now();
+    DateTime dateOnly = DateTime(now.year, now.month, now.day);
+
+    ExerciseLog log = ExerciseLog(
+      date: dateOnly,
+      exercises: _exercises,
+    );
+    await _logStorageService.saveExerciseLog(log);
+    print("운동 기록이 저장되었습니다: ${log.toJson()}");
   }
 
   Future<void> _saveExercise(int index) async {
@@ -83,6 +115,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
     });
   }
 
+  // 타이머 관련 메서드들
   void _startTimer() {
     setState(() {
       _isTimerRunning = true;
@@ -121,7 +154,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   void _showTimerPicker() {
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
+      builder: (context) => SizedBox(
         height: 250,
         child: CupertinoTimerPicker(
           initialTimerDuration: _timerDuration,
@@ -155,7 +188,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.save, size: 30),
-            onPressed: _saveAllExercises, // 모든 운동 저장
+            onPressed: _saveAllExercises, // 저장 후 홈 화면으로 이동
           ),
         ],
       ),
@@ -176,7 +209,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                       onSave: () => _saveExercise(index), // 개별 저장
                     ),
                     const SizedBox(height: 10),
-                    if (index == _exercises.length - 1) // 마지막 카드 아래에만 + Add 버튼 표시
+                    if (index == _exercises.length - 1)
                       ElevatedButton.icon(
                         onPressed: _addExercise,
                         icon: const Icon(Icons.add, color: Colors.grey),
@@ -185,7 +218,8 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                           style: TextStyle(color: Colors.black),
                         ),
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 20),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -197,14 +231,16 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
               },
             ),
           ),
-          //const Divider(height: 1, thickness: 1),
+          // 타이머 위젯
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                padding:
+                const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -220,17 +256,21 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                         _isTimerRunning
                             ? "Remaining time: ${_remainingTime.inMinutes}:${(_remainingTime.inSeconds % 60).toString().padLeft(2, '0')}"
                             : "Time set: ${_timerDuration.inMinutes}:${(_timerDuration.inSeconds % 60).toString().padLeft(2, '0')}",
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       Row(
                         children: [
                           // 타이머 시작/취소 버튼
                           ElevatedButton(
-                            onPressed: _isTimerRunning ? _cancelTimer : _startTimer,
+                            onPressed:
+                            _isTimerRunning ? _cancelTimer : _startTimer,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _isTimerRunning ? Colors.red : Colors.green,
+                              backgroundColor:
+                              _isTimerRunning ? Colors.red : Colors.green,
                               minimumSize: const Size(50, 36),
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding:
+                              const EdgeInsets.symmetric(horizontal: 8),
                             ),
                             child: Text(_isTimerRunning ? "Stop" : "Start"),
                           ),
@@ -240,7 +280,8 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                             onPressed: _showTimerPicker,
                             style: ElevatedButton.styleFrom(
                               minimumSize: const Size(50, 36),
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding:
+                              const EdgeInsets.symmetric(horizontal: 8),
                             ),
                             child: const Text("Set"),
                           ),

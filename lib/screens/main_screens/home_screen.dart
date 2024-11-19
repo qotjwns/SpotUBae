@@ -18,14 +18,14 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   void _addOrEditGoal(String goalType, [String? currentGoal]) {
-    TextEditingController _goalController = TextEditingController(text: currentGoal);
+    TextEditingController goalController = TextEditingController(text: currentGoal);
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Edit $goalType'),
         content: TextField(
-          controller: _goalController,
+          controller: goalController,
           decoration: const InputDecoration(hintText: 'Input your goal'),
         ),
         actions: [
@@ -43,7 +43,7 @@ class HomeScreenState extends State<HomeScreen> {
               }
 
               Provider.of<GoalManageService>(context, listen: false)
-                  .setGoal(typeKey, _goalController.text);
+                  .setGoal(typeKey, goalController.text);
               Navigator.of(context).pop();
             },
             child: const Text('Save'),

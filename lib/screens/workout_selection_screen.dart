@@ -1,10 +1,12 @@
 // workout_selection_screen.dart
 
 import 'package:flutter/material.dart';
-import '../storage_service.dart';
+import 'package:group_app/screens/make_my_routine_screen.dart';
+import '../services/storage_service.dart';
+import '../models/exercise.dart'; // Exercise 모델을 임포트합니다.
 
 class WorkoutSelectionScreen extends StatefulWidget {
-  final String workoutType;  // 운동 부위 (예: chest, back, shoulder 등)
+  final String workoutType; // 운동 부위
 
   const WorkoutSelectionScreen({super.key, required this.workoutType});
 
@@ -18,53 +20,48 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
 
   List<String> _filteredWorkouts = [];
   Set<String> _selectedWorkouts = {};
-  String _selectedCategory = "recommendation";  // 기본 카테고리 설정 (recommendation)
+  String _selectedCategory = "recommendation"; // 기본 카테고리 설정
 
   List<String> _recommendationWorkouts = [];
-  List<String> _currentWorkoutCategoryWorkouts = [];  // 현재 선택된 부위의 운동 목록
+  List<String> _currentWorkoutCategoryWorkouts = [];
 
   @override
   void initState() {
     super.initState();
-    _loadWorkouts(widget.workoutType);  // 해당 부위에 맞는 운동 목록 로드
+    _loadWorkouts(widget.workoutType); // 운동 목록 로드
   }
 
-  // 운동 부위에 맞는 운동 종목을 로드
   Future<void> _loadWorkouts(String workoutType) async {
-    // 해당 부위의 운동 목록 로드
-    List<String> categoryWorkouts = _storageService.getWorkoutsByCategory(workoutType);
+    List<String> categoryWorkouts =
+    _storageService.getWorkoutsByCategory(workoutType);
     _currentWorkoutCategoryWorkouts = categoryWorkouts;
 
-    // recommendation 운동 목록 로드 (챗봇에서 얻은 운동 목록)
-    List<String> recommendationWorkouts = await _storageService.loadExercisesFromDownload("recommendation");
+    List<String> recommendationWorkouts =
+    await _storageService.loadExercisesFromDownload("recommendation");
     _recommendationWorkouts = recommendationWorkouts;
 
-    // 초기 필터 적용
     _updateFilteredWorkouts();
   }
 
-  // 운동 종목을 검색해서 필터링
   void _filterWorkouts(String query) {
     _updateFilteredWorkouts(query: query);
   }
 
-  // 필터링 로직을 분리하여 재사용
   void _updateFilteredWorkouts({String query = ''}) {
     List<String> workoutsToFilter;
 
     if (_selectedCategory == "recommendation") {
-      // recommendation에서는 추출된 운동 목록과 부위 운동 목록에서 일치하는 것만 표시
       workoutsToFilter = _recommendationWorkouts
           .where((workout) => _currentWorkoutCategoryWorkouts.contains(workout))
           .toList();
     } else {
-      // 해당 부위 운동 목록에서만 필터링
       workoutsToFilter = List.from(_currentWorkoutCategoryWorkouts);
     }
 
     if (query.isNotEmpty) {
       workoutsToFilter = workoutsToFilter
-          .where((workout) => workout.toLowerCase().contains(query.toLowerCase()))
+          .where(
+              (workout) => workout.toLowerCase().contains(query.toLowerCase()))
           .toList();
     }
 
@@ -73,12 +70,31 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
     });
   }
 
-  // 카테고리 선택 시 해당 운동 목록 업데이트
   void _onCategorySelected(String category) {
     setState(() {
       _selectedCategory = category;
-      _filterWorkouts(_searchController.text);  // 현재 검색어로 필터링
+      _filterWorkouts(_searchController.text);
     });
+  }
+
+  void _navigateToMakeMyRoutineScreen() {
+    // 선택된 운동들을 Exercise 객체 리스트로 변환
+    List<Exercise> selectedExercises = _selectedWorkouts.map((workoutName) {
+      return Exercise(
+        name: workoutName,
+        sets: [],
+        recentRecord: '0kg x 0회',
+        recommendedRecord: '0kg x 0회',
+      );
+    }).toList();
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => MakeMyRoutineScreen(
+          initialExercises: selectedExercises,
+        ),
+      ),
+    );
   }
 
   @override
@@ -86,6 +102,14 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("루틴 만들기 - ${_capitalize(widget.workoutType)}"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.fitness_center),
+            onPressed: _selectedWorkouts.isNotEmpty
+                ? _navigateToMakeMyRoutineScreen
+                : null, // 선택된 운동이 있을 때만 활성화
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -104,14 +128,17 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
               ),
             ),
           ),
-          // 운동 부위 선택 필터 (Recommendation과 해당 부위 버튼만)
+          // 카테고리 선택 필터
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Row(
               children: [
-                Expanded(child: _buildCategoryButton("recommendation", "추천")),
-                SizedBox(width: 8),
-                Expanded(child: _buildCategoryButton(widget.workoutType, _capitalize(widget.workoutType))),
+                Expanded(
+                    child: _buildCategoryButton("recommendation", "추천")),
+                const SizedBox(width: 8),
+                Expanded(
+                    child: _buildCategoryButton(
+                        widget.workoutType, _capitalize(widget.workoutType))),
               ],
             ),
           ),
@@ -138,7 +165,7 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
                 );
               },
             )
-                : Center(
+                : const Center(
               child: Text("운동을 찾을 수 없습니다."),
             ),
           ),
@@ -147,17 +174,15 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
     );
   }
 
-  // 카테고리 버튼을 생성하는 위젯
   Widget _buildCategoryButton(String category, String label) {
     return ChoiceChip(
       label: Text(label),
       selected: _selectedCategory == category,
       onSelected: (_) {
-        _onCategorySelected(category);  // 카테고리 선택 시 동작 처리
+        _onCategorySelected(category);
       },
     );
   }
 
-  // 문자열의 첫 글자를 대문자로 변환
   String _capitalize(String s) => s[0].toUpperCase() + s.substring(1);
 }
