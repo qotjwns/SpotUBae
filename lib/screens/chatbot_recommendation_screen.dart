@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:group_app/storage_service.dart';
+import 'package:group_app/services/storage_service.dart';
 
 class ChatbotRecommendedScreen extends StatefulWidget {
   const ChatbotRecommendedScreen({super.key});

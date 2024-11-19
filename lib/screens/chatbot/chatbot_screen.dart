@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:group_app/widgets/button_widget.dart';
 import '../../models/message.dart';
 import '../../services/api_service.dart';
-import '../../storage_service.dart';
+import '../../services/storage_service.dart';
 import '../workout_selection_screen.dart';
 
 class ChatBotScreen extends StatefulWidget {

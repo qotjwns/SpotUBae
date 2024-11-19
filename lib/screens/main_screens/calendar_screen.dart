@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-
+import 'package:intl/intl.dart'; // 추가
+import '../../models/exercise_log.dart'; // 추가
+import '../../services/exercise_log_storage_service.dart'; // 추가
 import '../logs/diet_log_screen.dart';
+import '../logs/exercise_log_detail_screen.dart'; // 운동 기록 상세 화면 추가
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -13,22 +16,39 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
-  DateTime _selectedDay = DateTime.now(); // 기본 날짜를 오늘 날짜로 설정
+  DateTime _selectedDay = DateTime.now();
+  final ExerciseLogStorageService _logStorageService = ExerciseLogStorageService();
+  ExerciseLog? _selectedDayExerciseLog;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExerciseLogForSelectedDay();
+  }
+
+  void _loadExerciseLogForSelectedDay() async {
+    ExerciseLog? log =
+    await _logStorageService.loadExerciseLogByDate(_selectedDay);
+    setState(() {
+      _selectedDayExerciseLog = log;
+    });
+  }
+
+  String getFormattedDate(DateTime date) {
+    return DateFormat('yyyy-MM-dd').format(date);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 80,
-        title: const Text(
-          'Calendar',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-        ),
+        title: const Text('Calendar'),
       ),
       body: Column(
         children: [
           TableCalendar(
-            headerStyle: const HeaderStyle(formatButtonVisible: false, titleCentered: true),
+            headerStyle: const HeaderStyle(
+                formatButtonVisible: false, titleCentered: true),
             firstDay: DateTime.utc(2020, 1, 1),
             lastDay: DateTime.utc(2030, 12, 31),
             focusedDay: _focusedDay,
@@ -39,6 +59,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 _selectedDay = selectedDay;
                 _focusedDay = focusedDay;
               });
+              _loadExerciseLogForSelectedDay();
             },
             onFormatChanged: (format) {
               if (_calendarFormat != format) {
@@ -58,16 +79,44 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 // 운동 기록 섹션
                 Expanded(
                   child: Column(
-                    children: const [
-                      Padding(
+                    children: [
+                      const Padding(
                         padding: EdgeInsets.all(8.0),
                         child: Text(
                           'Workout Log',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
                       Expanded(
-                        child: Center(child: Text('운동 기록 예시')),
+                        child: _selectedDayExerciseLog != null &&
+                            _selectedDayExerciseLog!.exercises.isNotEmpty
+                            ? ListView.builder(
+                          itemCount:
+                          _selectedDayExerciseLog!.exercises.length,
+                          itemBuilder: (context, index) {
+                            final exercise =
+                            _selectedDayExerciseLog!.exercises[index];
+                            return ListTile(
+                              title: Text(exercise.name),
+                              subtitle: Text(
+                                  'Sets: ${exercise.sets.length}'),
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ExerciseLogDetailScreen(
+                                          exercise: exercise,
+                                        ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        )
+                            : Center(
+                          child: Text('No workout log for this day'),
+                        ),
                       ),
                     ],
                   ),
@@ -81,7 +130,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         padding: EdgeInsets.all(8.0),
                         child: Text(
                           'Diet Log',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
                       Expanded(
@@ -90,7 +140,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             onPressed: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) => DietLogScreen(selectedDay: _selectedDay),
+                                  builder: (context) => DietLogScreen(
+                                      selectedDay: _selectedDay),
                                 ),
                               );
                             },

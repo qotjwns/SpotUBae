@@ -1,14 +1,10 @@
-// storage_service.dart
-
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 
-import 'models/message.dart';
+import '../models/message.dart';
 
 class StorageService {
-  static const platform = MethodChannel('com.example.group_app/download_path');  // MethodChannel 설정
-
   List<String> chestWorkouts = [
     "Barbell Bench Press", "Incline Barbell Press", "Incline Dumbbell Press",
     "Decline Barbell Press", "Dumbbell Bench Press", "Dumbbell Fly",
@@ -91,13 +87,13 @@ class StorageService {
     return matchingExercises;
   }
 
-  // 다운로드 디렉터리 경로를 가져오는 메서드
-  Future<String> getDownloadDirectory() async {
+  // 애플리케이션 문서 디렉토리 경로를 가져오는 메서드
+  Future<String> getApplicationDirectory() async {
     try {
-      // 네이티브(Android)에서 다운로드 디렉터리 경로를 가져옴
-      final String downloadDir = await platform.invokeMethod('getDownloadDirectory');
-      return downloadDir;
+      final directory = await getApplicationDocumentsDirectory();
+      return directory.path;
     } catch (e) {
+      print("애플리케이션 디렉토리 경로를 가져오는 중 오류 발생: $e");
       return '';
     }
   }
@@ -105,14 +101,14 @@ class StorageService {
   // 운동 종목을 파일에 저장하는 메서드
   Future<void> saveExercisesToDownload(List<String> exercises, String workoutType) async {
     try {
-      final downloadDir = await getDownloadDirectory();
-      if (downloadDir.isEmpty) {
-        print("다운로드 디렉터리 경로를 가져올 수 없습니다.");
+      final appDir = await getApplicationDirectory();
+      if (appDir.isEmpty) {
+        print("애플리케이션 디렉토리 경로를 가져올 수 없습니다.");
         return;
       }
 
       // 운동 부위(workoutType)에 맞는 파일 이름 설정
-      final file = File('$downloadDir/recommended_workouts_$workoutType.json');
+      final file = File('$appDir/recommended_workouts_$workoutType.json');
       final jsonContent = jsonEncode(exercises);
       await file.writeAsString(jsonContent);
 
@@ -125,14 +121,14 @@ class StorageService {
   // 저장된 운동 종목 불러오기 (운동 부위별로 불러오기)
   Future<List<String>> loadExercisesFromDownload(String workoutType) async {
     try {
-      final downloadDir = await getDownloadDirectory();
-      if (downloadDir.isEmpty) {
-        print("다운로드 디렉터리 경로를 가져올 수 없습니다.");
+      final appDir = await getApplicationDirectory();
+      if (appDir.isEmpty) {
+        print("애플리케이션 디렉토리 경로를 가져올 수 없습니다.");
         return [];
       }
 
       // 운동 부위별로 파일 경로 설정
-      final file = File('$downloadDir/recommended_workouts_$workoutType.json');
+      final file = File('$appDir/recommended_workouts_$workoutType.json');
       if (await file.exists()) {
         final content = await file.readAsString();
         List<dynamic> jsonData = jsonDecode(content);
@@ -150,13 +146,13 @@ class StorageService {
 
   Future<void> saveMessages(String workoutType, List<Message> messages) async {
     try {
-      final downloadDir = await getDownloadDirectory();  // 다운로드 디렉터리 경로 얻기
-      if (downloadDir.isEmpty) {
-        print("다운로드 디렉터리 경로를 가져올 수 없습니다.");
+      final appDir = await getApplicationDirectory();
+      if (appDir.isEmpty) {
+        print("애플리케이션 디렉토리 경로를 가져올 수 없습니다.");
         return;
       }
 
-      final file = File('$downloadDir/messages_$workoutType.json');  // 운동 부위별로 파일 경로 설정
+      final file = File('$appDir/messages_$workoutType.json');
       final jsonContent = jsonEncode(messages.map((e) => e.toJson()).toList());
       await file.writeAsString(jsonContent);
 
@@ -169,13 +165,13 @@ class StorageService {
   // 메시지 불러오기 메서드
   Future<List<Message>> loadMessages(String workoutType) async {
     try {
-      final downloadDir = await getDownloadDirectory();  // 다운로드 디렉터리 경로 얻기
-      if (downloadDir.isEmpty) {
-        print("다운로드 디렉터리 경로를 가져올 수 없습니다.");
+      final appDir = await getApplicationDirectory();
+      if (appDir.isEmpty) {
+        print("애플리케이션 디렉토리 경로를 가져올 수 없습니다.");
         return [];
       }
 
-      final file = File('$downloadDir/messages_$workoutType.json');
+      final file = File('$appDir/messages_$workoutType.json');
       if (await file.exists()) {
         final content = await file.readAsString();
         List<dynamic> jsonData = jsonDecode(content);
@@ -194,15 +190,15 @@ class StorageService {
 
   Future<void> deleteMessages(String workoutType) async {
     try {
-      final downloadDir = await getDownloadDirectory();  // 다운로드 디렉터리 경로 얻기
-      if (downloadDir.isEmpty) {
-        print("다운로드 디렉터리 경로를 가져올 수 없습니다.");
+      final appDir = await getApplicationDirectory();
+      if (appDir.isEmpty) {
+        print("애플리케이션 디렉토리 경로를 가져올 수 없습니다.");
         return;
       }
 
-      final file = File('$downloadDir/messages_$workoutType.json');  // 운동 부위별로 파일 경로 설정
+      final file = File('$appDir/messages_$workoutType.json');
       if (await file.exists()) {
-        await file.delete();  // 파일 삭제
+        await file.delete();
         print("Messages for $workoutType deleted successfully.");
       } else {
         print("No message file found for $workoutType.");
@@ -222,9 +218,6 @@ class StorageService {
       }
     }
 
-    // 업데이트된 운동 목록을 저장 (필요시 파일이나 데이터베이스에 다시 저장)
-    // 예를 들어, 운동 부위별 파일에 저장하거나 다른 방식으로 관리
-    // 여기서는 단순히 로그를 남깁니다.
     print("Updated $workoutType workouts: $currentWorkouts");
   }
 }

@@ -1,4 +1,4 @@
-import 'package:group_app/storage_service.dart';
+import 'package:group_app/services/storage_service.dart';
 
 import '../models/message.dart';  // StorageService 임포트
 
