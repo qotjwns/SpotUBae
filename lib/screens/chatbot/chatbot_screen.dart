@@ -38,7 +38,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     _apiService = ApiService(
         apiKey: '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');
     _loadMessages();
-    _loadExercises();  // 운동 종목을 불러오는 함수 호출
+    _loadExercises();
   }
 
   Future<void> _loadMessages() async {
@@ -46,14 +46,9 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     setState(() {
       _messages.addAll(loadedMessages);
     });
-
-    if (_messages.isEmpty) {
-      _addWelcomeMessage();
-    }
   }
 
   Future<void> _loadExercises() async {
-    // recommendation 운동 목록 불러오기
     List<String> loadedExercises = await _storageService.loadExercisesFromDownload("recommendation");
 
     if (loadedExercises.isNotEmpty) {
@@ -73,20 +68,6 @@ class ChatBotScreenState extends State<ChatBotScreen> {
         ));
       });
     }
-  }
-
-  void _addWelcomeMessage() {
-    final welcomeMessage = Message(
-      content: '${_capitalize(widget.workoutType)} 부위 챗봇에 오신 것을 환영합니다! 운동 관련 질문을 해주세요.',
-      timestamp: DateTime.now(),
-      role: 'assistant',
-    );
-
-    setState(() {
-      _messages.add(welcomeMessage);
-    });
-
-    _saveMessages();
   }
 
   void _sendPredefinedMessage(String messageContent) {
@@ -279,7 +260,6 @@ class ChatBotScreenState extends State<ChatBotScreen> {
       await _storageService.deleteMessages(widget.workoutType);
       setState(() {
         _messages.clear();
-        _addWelcomeMessage();
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('채팅이 초기화되었습니다.')),
@@ -317,7 +297,5 @@ class ChatBotScreenState extends State<ChatBotScreen> {
       ),
     );
   }
-
-  // 문자열의 첫 글자를 대문자로 변환
   String _capitalize(String s) => s[0].toUpperCase() + s.substring(1);
 }

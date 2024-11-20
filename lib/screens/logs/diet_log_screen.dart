@@ -6,17 +6,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 class DietLogScreen extends StatefulWidget {
   final DateTime selectedDay;
 
-  const DietLogScreen({Key? key, required this.selectedDay}) : super(key: key);
+  const DietLogScreen({super.key, required this.selectedDay});
 
   @override
-  _DietLogScreenState createState() => _DietLogScreenState();
+  DietLogScreenState createState() => DietLogScreenState();
 }
 
-class _DietLogScreenState extends State<DietLogScreen> {
-  // 날짜별 식단 로그 저장
+class DietLogScreenState extends State<DietLogScreen> {
   Map<String, Map<String, List<ConsumedFood>>> _dietLogsByDate = {};
 
-  // 현재 선택된 날짜의 식단 로그를 가져오기 위한 getter
   Map<String, List<ConsumedFood>> get _dietLogs {
     String dateKey = _getDateKey(widget.selectedDay);
     if (!_dietLogsByDate.containsKey(dateKey)) {
@@ -29,7 +27,6 @@ class _DietLogScreenState extends State<DietLogScreen> {
     return _dietLogsByDate[dateKey]!;
   }
 
-  // Nutritionix API 정보
   final String appId = '9b6fd567';
   final String appKey = '0354b40e9df9c5fbdfc2ae8159fcb963';
 
@@ -39,12 +36,10 @@ class _DietLogScreenState extends State<DietLogScreen> {
     _loadDietLogs();
   }
 
-  /// 날짜를 문자열 키로 변환
   String _getDateKey(DateTime date) {
     return date.toIso8601String().split('T')[0]; // 'YYYY-MM-DD' 형식
   }
 
-  /// 식단 로그 저장
   Future<void> _saveDietLogs() async {
     final prefs = await SharedPreferences.getInstance();
     String data = jsonEncode(_dietLogsByDate.map((date, meals) {

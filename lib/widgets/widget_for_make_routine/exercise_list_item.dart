@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/exercise.dart';
+import '../../models/exercise.dart';
 
 class ExerciseListItem extends StatefulWidget {
   final Exercise exercise;
@@ -14,10 +14,10 @@ class ExerciseListItem extends StatefulWidget {
   });
 
   @override
-  _ExerciseListItemState createState() => _ExerciseListItemState();
+  ExerciseListItemState createState() => ExerciseListItemState();
 }
 
-class _ExerciseListItemState extends State<ExerciseListItem> {
+class ExerciseListItemState extends State<ExerciseListItem> {
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _repsController = TextEditingController();
 

@@ -1,6 +1,9 @@
+// widgets/widget_for_make_routine/exercise_card.dart
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../models/exercise.dart';
+import '../../models/exercise.dart';
+import '../../screens/chatbot/chatbot_screen.dart';
 
 class ExerciseCard extends StatefulWidget {
   final Exercise exercise;
@@ -17,16 +20,16 @@ class ExerciseCard extends StatefulWidget {
   });
 
   @override
-  _ExerciseCardState createState() => _ExerciseCardState();
+  ExerciseCardState createState() => ExerciseCardState();
 }
 
-class _ExerciseCardState extends State<ExerciseCard> {
-  List<Map<String, int>> sets = [];
+class ExerciseCardState extends State<ExerciseCard> {
+  late List<Map<String, int>> sets;
 
   @override
   void initState() {
     super.initState();
-    sets = widget.exercise.sets;
+    sets = List<Map<String, int>>.from(widget.exercise.sets);
   }
 
   void _addSet() {
@@ -56,11 +59,12 @@ class _ExerciseCardState extends State<ExerciseCard> {
     await showModalBottomSheet(
       context: context,
       builder: (_) {
-        return Container(
+        return SizedBox(
           height: 200,
           child: CupertinoPicker(
             itemExtent: 40,
-            scrollController: FixedExtentScrollController(initialItem: (initialValue - minValue) ~/ interval),
+            scrollController: FixedExtentScrollController(
+                initialItem: (initialValue - minValue) ~/ interval),
             onSelectedItemChanged: (index) {
               onSelected(minValue + index * interval);
             },
@@ -77,6 +81,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      key: ValueKey(widget.exercise.id), // 고유 ID 사용
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -86,15 +91,49 @@ class _ExerciseCardState extends State<ExerciseCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 드래그 핸들과 상단 행
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  widget.exercise.name,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                // 드래그 핸들과 텍스트를 감싸는 Expanded
+                Expanded(
+                  child: Row(
+                    children: [
+                      ReorderableDragStartListener(
+                        index: 0, // 실제 인덱스는 ReorderableListView에서 관리
+                        child: const Icon(Icons.drag_handle),
+                      ),
+                      const SizedBox(width: 8),
+                      // 텍스트를 Expanded로 감싸고 오버플로우 처리
+                      Expanded(
+                        child: Text(
+                          widget.exercise.name,
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis, // 텍스트 오버플로우 처리
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                // 아이콘 버튼들
                 Row(
+                  mainAxisSize: MainAxisSize.min, // 최소 크기로 설정
                   children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.question_mark,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ChatBotScreen(
+                                workoutType: widget.exercise.name),
+                          ),
+                        );
+                      },
+                    ),
                     IconButton(
                       icon: const Icon(Icons.save, color: Colors.black),
                       onPressed: widget.onSave,
