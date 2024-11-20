@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:uuid/uuid.dart'; // uuid 패키지 임포트
 import '../models/exercise.dart';
 import '../models/exercise_log.dart';
 import '../services/routine_storage_service.dart';
@@ -23,7 +22,6 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   final ExerciseLogStorageService _logStorageService =
       ExerciseLogStorageService();
   final AudioPlayer _audioPlayer = AudioPlayer();
-  final Uuid _uuid = Uuid(); // Uuid 인스턴스 생성
 
   Duration _timerDuration = const Duration(minutes: 1);
   bool _isTimerRunning = false;
