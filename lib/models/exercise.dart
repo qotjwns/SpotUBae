@@ -1,15 +1,21 @@
+// models/exercise.dart
+
+import 'package:uuid/uuid.dart';
+
 class Exercise {
+  final String id;
   final String name;
   final List<Map<String, int>> sets; // 각 세트별로 무게와 횟수를 저장
   final String recentRecord; // 최근 기록
   final String recommendedRecord; // 추천 기록
 
   Exercise({
+    String? id,
     required this.name,
     this.sets = const [],
     this.recentRecord = '0kg x 0회',
     this.recommendedRecord = '0kg x 0회',
-  });
+  }) : id = id ?? const Uuid().v4();
 
   factory Exercise.fromJson(Map<String, dynamic> json) {
     return Exercise(

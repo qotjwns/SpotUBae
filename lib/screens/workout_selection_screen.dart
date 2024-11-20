@@ -1,9 +1,7 @@
-// workout_selection_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:group_app/screens/make_my_routine_screen.dart';
 import '../services/storage_service.dart';
-import '../models/exercise.dart'; // Exercise 모델을 임포트합니다.
+import '../models/exercise.dart';
 
 class WorkoutSelectionScreen extends StatefulWidget {
   final String workoutType; // 운동 부위
@@ -19,7 +17,7 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
   final StorageService _storageService = StorageService();
 
   List<String> _filteredWorkouts = [];
-  Set<String> _selectedWorkouts = {};
+  Set<String> selectedWorkouts = {};
   String _selectedCategory = "recommendation"; // 기본 카테고리 설정
 
   List<String> _recommendationWorkouts = [];
@@ -78,8 +76,7 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
   }
 
   void _navigateToMakeMyRoutineScreen() {
-    // 선택된 운동들을 Exercise 객체 리스트로 변환
-    List<Exercise> selectedExercises = _selectedWorkouts.map((workoutName) {
+    List<Exercise> selectedExercises = selectedWorkouts.map((workoutName) {
       return Exercise(
         name: workoutName,
         sets: [],
@@ -105,7 +102,7 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.fitness_center),
-            onPressed: _selectedWorkouts.isNotEmpty
+            onPressed: selectedWorkouts.isNotEmpty
                 ? _navigateToMakeMyRoutineScreen
                 : null, // 선택된 운동이 있을 때만 활성화
           ),
@@ -134,14 +131,20 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
             child: Row(
               children: [
                 Expanded(
-                    child: _buildCategoryButton("recommendation", "추천")),
+                  child: _buildCategoryButton("recommendation", "추천"),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
-                    child: _buildCategoryButton(
-                        widget.workoutType, _capitalize(widget.workoutType))),
+                  child: _buildCategoryButton(
+                    widget.workoutType,
+                    _capitalize(widget.workoutType),
+                  ),
+                ),
               ],
             ),
           ),
+          const SizedBox(height: 8),
+          // 운동 리스트
           Expanded(
             child: _filteredWorkouts.isNotEmpty
                 ? ListView.builder(
@@ -150,14 +153,26 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
                 final workout = _filteredWorkouts[index];
                 return ListTile(
                   title: Text(workout),
-                  leading: Checkbox(
-                    value: _selectedWorkouts.contains(workout),
+                  tileColor: selectedWorkouts.contains(workout)
+                      ? Colors.grey.withOpacity(0.1)
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      if (selectedWorkouts.contains(workout)) {
+                        selectedWorkouts.remove(workout);
+                      } else {
+                        selectedWorkouts.add(workout);
+                      }
+                    });
+                  },
+                  trailing: Checkbox(
+                    value: selectedWorkouts.contains(workout),
                     onChanged: (bool? selected) {
                       setState(() {
                         if (selected == true) {
-                          _selectedWorkouts.add(workout);
+                          selectedWorkouts.add(workout);
                         } else {
-                          _selectedWorkouts.remove(workout);
+                          selectedWorkouts.remove(workout);
                         }
                       });
                     },
@@ -184,5 +199,6 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
     );
   }
 
-  String _capitalize(String s) => s[0].toUpperCase() + s.substring(1);
+  String _capitalize(String s) =>
+      s.isNotEmpty ? s[0].toUpperCase() + s.substring(1) : s;
 }

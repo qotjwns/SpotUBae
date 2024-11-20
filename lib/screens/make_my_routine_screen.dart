@@ -1,5 +1,3 @@
-// lib/screens/make_my_routine_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -7,12 +5,12 @@ import '../models/exercise.dart';
 import '../models/exercise_log.dart';
 import '../services/routine_storage_service.dart';
 import '../services/exercise_log_storage_service.dart'; // 추가
-import '../widgets/exercise_card.dart';
+import '../widgets/widget_for_make_routine/exercise_card.dart';
 
 class MakeMyRoutineScreen extends StatefulWidget {
   final List<Exercise>? initialExercises; // 초기 운동 리스트
 
-  const MakeMyRoutineScreen({Key? key, this.initialExercises}) : super(key: key);
+  const MakeMyRoutineScreen({super.key, this.initialExercises});
 
   @override
   State<MakeMyRoutineScreen> createState() => _MakeMyRoutineScreenState();
@@ -170,6 +168,17 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
     );
   }
 
+  // 드래그 앤 드롭 순서 변경을 처리하는 메서드
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final Exercise movedExercise = _exercises.removeAt(oldIndex);
+      _exercises.insert(newIndex, movedExercise);
+    });
+  }
+
   @override
   void dispose() {
     _audioPlayer.dispose();
@@ -195,38 +204,22 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
+            child: ReorderableListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: _exercises.length,
+              onReorder: _onReorder,
+              buildDefaultDragHandles: false, // 커스텀 드래그 핸들을 사용하기 위해 false로 설정
               itemBuilder: (context, index) {
                 final exercise = _exercises[index];
-                return Column(
-                  children: [
-                    ExerciseCard(
-                      exercise: exercise,
-                      onDelete: () => _removeExercise(index),
-                      onSetsUpdated: (sets) => _updateSets(index, sets),
-                      onSave: () => _saveExercise(index), // 개별 저장
-                    ),
-                    const SizedBox(height: 10),
-                    if (index == _exercises.length - 1)
-                      ElevatedButton.icon(
-                        onPressed: _addExercise,
-                        icon: const Icon(Icons.add, color: Colors.grey),
-                        label: const Text(
-                          "Add",
-                          style: TextStyle(color: Colors.black),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 20),
-                  ],
+                return Dismissible(
+                  key: ValueKey(exercise), // 각 아이템에 고유한 키 부여
+                  background: Container(color: Colors.red),
+                  onDismissed: (_) => _removeExercise(index),
+                  child: ExerciseCard(
+                    exercise: exercise,
+                    onDelete: () => _removeExercise(index),
+                    onSetsUpdated: (sets) => _updateSets(index, sets),
+                    onSave: () => _saveExercise(index),),
                 );
               },
             ),
@@ -248,14 +241,14 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                       // 초기 상태: 타이머가 설정되지 않았을 때
                       ElevatedButton(
                         onPressed: _showTimerPicker,
-                        child: const Text("Timer set"),
+                        child: const Text("Timer 설정"),
                       ),
                     ] else ...[
                       // 타이머가 설정된 후 표시
                       Text(
                         _isTimerRunning
-                            ? "Remaining time: ${_remainingTime.inMinutes}:${(_remainingTime.inSeconds % 60).toString().padLeft(2, '0')}"
-                            : "Time set: ${_timerDuration.inMinutes}:${(_timerDuration.inSeconds % 60).toString().padLeft(2, '0')}",
+                            ? "남은 시간: ${_remainingTime.inMinutes}:${(_remainingTime.inSeconds % 60).toString().padLeft(2, '0')}"
+                            : "설정된 시간: ${_timerDuration.inMinutes}:${(_timerDuration.inSeconds % 60).toString().padLeft(2, '0')}",
                         style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
@@ -272,7 +265,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                               padding:
                               const EdgeInsets.symmetric(horizontal: 8),
                             ),
-                            child: Text(_isTimerRunning ? "Stop" : "Start"),
+                            child: Text(_isTimerRunning ? "중지" : "시작"),
                           ),
                           const SizedBox(width: 8),
                           // 시간 설정 버튼
@@ -283,7 +276,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                               padding:
                               const EdgeInsets.symmetric(horizontal: 8),
                             ),
-                            child: const Text("Set"),
+                            child: const Text("설정"),
                           ),
                         ],
                       ),
@@ -294,6 +287,10 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addExercise,
+        child: const Icon(Icons.add),
       ),
     );
   }
