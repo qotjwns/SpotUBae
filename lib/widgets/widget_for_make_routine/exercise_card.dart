@@ -99,12 +99,6 @@ class ExerciseCardState extends State<ExerciseCard> {
                 Expanded(
                   child: Row(
                     children: [
-                      ReorderableDragStartListener(
-                        index: 0, // 실제 인덱스는 ReorderableListView에서 관리
-                        child: const Icon(Icons.drag_handle),
-                      ),
-                      const SizedBox(width: 8),
-                      // 텍스트를 Expanded로 감싸고 오버플로우 처리
                       Expanded(
                         child: Text(
                           widget.exercise.name,
