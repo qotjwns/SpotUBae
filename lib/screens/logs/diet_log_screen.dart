@@ -1,7 +1,12 @@
+// lib/screens/logs/diet_log_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../models/meal_log.dart'; // MealLog 임포트
+import '../../models/consumed_food.dart'; // ConsumedFood 임포트
+import '../../services/food_service.dart'; // FoodService 임포트
 
 class DietLogScreen extends StatefulWidget {
   final DateTime selectedDay;
@@ -13,22 +18,20 @@ class DietLogScreen extends StatefulWidget {
 }
 
 class DietLogScreenState extends State<DietLogScreen> {
-  Map<String, Map<String, List<ConsumedFood>>> _dietLogsByDate = {};
+  Map<String, Map<String, MealLog>> _dietLogsByDate = {};
+  final FoodService _foodService = FoodService();
 
-  Map<String, List<ConsumedFood>> get _dietLogs {
+  Map<String, MealLog> get _dietLogs {
     String dateKey = _getDateKey(widget.selectedDay);
     if (!_dietLogsByDate.containsKey(dateKey)) {
       _dietLogsByDate[dateKey] = {
-        'Breakfast': [],
-        'Lunch': [],
-        'Dinner': [],
+        'Breakfast': MealLog(),
+        'Lunch': MealLog(),
+        'Dinner': MealLog(),
       };
     }
     return _dietLogsByDate[dateKey]!;
   }
-
-  final String appId = '9b6fd567';
-  final String appKey = '0354b40e9df9c5fbdfc2ae8159fcb963';
 
   @override
   void initState() {
@@ -45,10 +48,10 @@ class DietLogScreenState extends State<DietLogScreen> {
     String data = jsonEncode(_dietLogsByDate.map((date, meals) {
       return MapEntry(
         date,
-        meals.map((meal, foods) {
+        meals.map((meal, log) {
           return MapEntry(
             meal,
-            foods.map((food) => food.toJson()).toList(),
+            log.toJson(),
           );
         }),
       );
@@ -69,75 +72,70 @@ class DietLogScreenState extends State<DietLogScreen> {
         _dietLogsByDate = jsonData.map((date, meals) {
           return MapEntry(
             date,
-            (meals as Map<String, dynamic>).map((meal, foods) {
-              List<ConsumedFood> consumedFoods = (foods as List<dynamic>)
-                  .map((food) => ConsumedFood.fromJson(food))
-                  .toList();
-              return MapEntry(meal, consumedFoods);
+            (meals as Map<String, dynamic>).map((meal, log) {
+              return MapEntry(
+                meal,
+                MealLog.fromJson(log),
+              );
             }),
           );
-        }).cast<String, Map<String, List<ConsumedFood>>>();
+        }).cast<String, Map<String, MealLog>>();
       });
     }
   }
 
-  /// 음식 검색 함수
-  Future<List<Map<String, dynamic>>> searchFoods(String query) async {
-    final url = Uri.parse(
-        'https://trackapi.nutritionix.com/v2/search/instant?query=$query');
-
-    final response = await http.get(url, headers: {
-      'x-app-id': appId,
-      'x-app-key': appKey,
-    });
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final List commonFoods = data['common'];
-
-      return commonFoods.map<Map<String, dynamic>>((food) {
-        return {
-          'food_name': food['food_name'],
-          'photo': food['photo']['thumb'],
-        };
-      }).toList();
-    } else {
-      throw Exception('Failed to load foods');
-    }
-  }
-
-  /// 영양 정보 가져오기
-  Future<Map<String, dynamic>> getFoodNutrients(String foodName) async {
-    final url =
-    Uri.parse('https://trackapi.nutritionix.com/v2/natural/nutrients');
-
-    final response = await http.post(url,
-        headers: {
-          'x-app-id': appId,
-          'x-app-key': appKey,
-          'Content-Type': 'application/json',
-        },
-        body: json.encode({'query': foodName}));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final nutrients = data['foods'][0];
-
-      return {
-        'food_name': nutrients['food_name'],
-        'serving_weight_grams': nutrients['serving_weight_grams'],
-        'calories': nutrients['nf_calories'],
-        'carbs': nutrients['nf_total_carbohydrate'],
-        'protein': nutrients['nf_protein'],
-        'fat': nutrients['nf_total_fat'],
-      };
-    } else {
-      throw Exception('Failed to load nutrients');
-    }
-  }
-
   /// 특정 식사에 음식 추가
-  void _addDiet(String meal) {
+  Future<void> _addDiet(String meal) async {
+    final bool? isSkipped = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text('$meal 추가'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('해당 끼니를 드셨나요?'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop(false); // '예' 선택
+                    },
+                    child: const Text('예'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop(true); // '아니요' 선택
+                    },
+                    child: const Text('아니요'),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (isSkipped != null) {
+      if (isSkipped) {
+        _markMealAsSkipped(meal);
+      } else {
+        _openFoodSelection(meal);
+      }
+    }
+  }
+
+  void _markMealAsSkipped(String meal) {
+    setState(() {
+      _dietLogs[meal]!.isSkipped = true;
+      _dietLogs[meal]!.foods.clear(); // 기존 음식 목록 삭제
+    });
+  }
+
+  void _openFoodSelection(String meal) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext sheetContext) {
@@ -162,7 +160,7 @@ class DietLogScreenState extends State<DietLogScreen> {
 
                       if (searchQuery.isNotEmpty) {
                         try {
-                          final results = await searchFoods(searchQuery);
+                          final results = await _foodService.searchFoods(searchQuery);
                           setState(() {
                             searchResults = results;
                           });
@@ -182,7 +180,8 @@ class DietLogScreenState extends State<DietLogScreen> {
                       ? const Center(child: Text('No results found.'))
                       : ListView.builder(
                     itemCount: searchResults.length,
-                    itemBuilder: (BuildContext listContext, int index) {
+                    itemBuilder:
+                        (BuildContext listContext, int index) {
                       final food = searchResults[index];
                       return ListTile(
                         leading: Image.network(food['photo']),
@@ -190,7 +189,7 @@ class DietLogScreenState extends State<DietLogScreen> {
                         onTap: () async {
                           Navigator.pop(sheetContext); // BottomSheet 닫기
                           final nutrients =
-                          await getFoodNutrients(food['food_name']);
+                          await _foodService.getFoodNutrients(food['food_name']);
                           _showQuantitySliderDialog(meal, nutrients);
                         },
                       );
@@ -262,21 +261,26 @@ class DietLogScreenState extends State<DietLogScreen> {
 
     final consumedFood = ConsumedFood(
       name: food['food_name'],
-      carbs: food['carbs'] * servingSize,
-      protein: food['protein'] * servingSize,
-      fat: food['fat'] * servingSize,
+      carbs: (food['carbs'] as num).toDouble() * servingSize,
+      protein: (food['protein'] as num).toDouble() * servingSize,
+      fat: (food['fat'] as num).toDouble() * servingSize,
       quantity: quantityInGrams, // 그램 단위로 저장
     );
 
     setState(() {
-      _dietLogs[meal]!.add(consumedFood);
+      _dietLogs[meal]!.foods.add(consumedFood);
+      _dietLogs[meal]!.isSkipped = false; // 음식 추가 시 skipped 상태 해제
     });
   }
 
   /// 음식 삭제
   void _removeFoodFromDietLog(String meal, int index) {
     setState(() {
-      _dietLogs[meal]!.removeAt(index);
+      _dietLogs[meal]!.foods.removeAt(index);
+      if (_dietLogs[meal]!.foods.isEmpty) {
+        // 음식이 모두 삭제되면 skipped 상태로 설정
+        _dietLogs[meal]!.isSkipped = true;
+      }
     });
   }
 
@@ -299,14 +303,77 @@ class DietLogScreenState extends State<DietLogScreen> {
     );
   }
 
+  /// 특정 음식 수정
+  void _editFoodInDietLog(String meal, int index) {
+    final consumedFood = _dietLogs[meal]!.foods[index];
+    double servingSize = consumedFood.quantity / consumedFood.carbs;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('${consumedFood.name} 수정'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('인분 수: ${servingSize.toStringAsFixed(1)}'),
+                  Slider(
+                    value: servingSize,
+                    min: 0.5,
+                    max: 3.0,
+                    divisions: 5,
+                    label: '${servingSize.toStringAsFixed(1)} 인분',
+                    onChanged: (value) {
+                      setState(() {
+                        servingSize = value;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _dietLogs[meal]!.foods[index] = ConsumedFood(
+                        name: consumedFood.name,
+                        carbs: (consumedFood.carbs * servingSize).toDouble(),
+                        protein:
+                        (consumedFood.protein * servingSize).toDouble(),
+                        fat: (consumedFood.fat * servingSize).toDouble(),
+                        quantity:
+                        (consumedFood.quantity * servingSize).toDouble(),
+                      );
+                      _dietLogs[meal]!.isSkipped = false; // 수정 시 skipped 상태 해제
+                    });
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text('수정'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text('취소'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   /// 하루 총 영양소 계산
   Map<String, double> _calculateTotalNutrients() {
     double totalCarbs = 0.0;
     double totalProtein = 0.0;
     double totalFat = 0.0;
 
-    _dietLogs.forEach((meal, foods) {
-      for (var consumed in foods) {
+    _dietLogs.forEach((meal, log) {
+      for (var consumed in log.foods) {
         totalCarbs += consumed.carbs;
         totalProtein += consumed.protein;
         totalFat += consumed.fat;
@@ -326,7 +393,8 @@ class DietLogScreenState extends State<DietLogScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Diet Log - ${widget.selectedDay.toLocal()}'.split(' ')[0]),
+        title:
+        Text('Diet Log - ${widget.selectedDay.toLocal()}'.split(' ')[0]),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
@@ -367,10 +435,11 @@ class DietLogScreenState extends State<DietLogScreen> {
             ),
             // 식사별 섭취한 음식 목록 표시
             ...['Breakfast', 'Lunch', 'Dinner'].map((meal) {
-              final foods = _dietLogs[meal]!;
+              final mealLog = _dietLogs[meal]!;
+              final foods = mealLog.foods;
               return Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0, vertical: 8.0),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.9, // 카드 너비 조절
                   child: Card(
@@ -380,43 +449,96 @@ class DietLogScreenState extends State<DietLogScreen> {
                         // 식사명 표시
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            meal,
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                          child: Row(
+                            mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                meal,
+                                style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              if (mealLog.isSkipped)
+                                const Text(
+                                  '음식을 안 먹었다',
+                                  style: TextStyle(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                            ],
                           ),
                         ),
-                        // 섭취한 음식 목록 표시
-                        if (foods.isNotEmpty)
-                          ListView.builder(
+                        // 섭취한 음식 목록 표시 또는 '음식을 안 먹었다' 표시
+                        if (!mealLog.isSkipped)
+                          foods.isNotEmpty
+                              ? ListView.builder(
                             shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
+                            physics:
+                            const NeverScrollableScrollPhysics(),
                             itemCount: foods.length,
-                            itemBuilder: (BuildContext context, int index) {
+                            itemBuilder:
+                                (BuildContext context, int index) {
                               final consumed = foods[index];
                               return ListTile(
-                                title: Text(consumed.name),
+                                title: Text(
+                                  consumed.name,
+                                  style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
                                 subtitle: Text(
-                                    'Amount: ${consumed.quantity.toStringAsFixed(1)}g\nCarbs: ${consumed.carbs.toStringAsFixed(1)}g, Protein: ${consumed.protein.toStringAsFixed(1)}g, Fat: ${consumed.fat.toStringAsFixed(1)}g'),
-                                trailing: IconButton(
-                                  icon: const Icon(
-                                    Icons.delete,
-                                    color: Colors.red,
-                                  ),
-                                  onPressed: () {
-                                    _removeFoodFromDietLog(meal, index);
-                                  },
+                                  'Amount: ${consumed.quantity.toStringAsFixed(1)}g\nCarbs: ${consumed.carbs.toStringAsFixed(1)}g, Protein: ${consumed.protein.toStringAsFixed(1)}g, Fat: ${consumed.fat.toStringAsFixed(1)}g',
+                                  style: const TextStyle(color: Colors.grey),
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit,
+                                          color: Colors.black),
+                                      onPressed: () {
+                                        _editFoodInDietLog(
+                                            meal, index);
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete,
+                                          color: Colors.black),
+                                      onPressed: () {
+                                        _removeFoodFromDietLog(
+                                            meal, index);
+                                      },
+                                    ),
+                                  ],
                                 ),
                               );
                             },
+                          )
+                              : const Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Text(
+                              '음식을 추가해주세요.',
+                              style: TextStyle(color: Colors.grey),
+                            ),
                           ),
                         // Add Food 버튼
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: ElevatedButton.icon(
-                            onPressed: () => _addDiet(meal),
+                            onPressed: () {
+                              if (mealLog.isSkipped) {
+                                // skipped 상태일 경우, 다시 음식 추가 시 skipped 해제
+                                setState(() {
+                                  _dietLogs[meal]!.isSkipped = false;
+                                });
+                              }
+                              _addDiet(meal);
+                            },
                             icon: const Icon(Icons.add),
-                            label: const Text('Add Food'),
+                            label: Text(mealLog.isSkipped
+                                ? '음식 추가하기'
+                                : 'Add Food'),
                           ),
                         ),
                       ],
@@ -428,42 +550,6 @@ class DietLogScreenState extends State<DietLogScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// 섭취한 음식을 나타내는 클래스
-class ConsumedFood {
-  final String name;
-  final double carbs;
-  final double protein;
-  final double fat;
-  final double quantity; // 단위: 그램 (섭취량)
-
-  ConsumedFood({
-    required this.name,
-    required this.carbs,
-    required this.protein,
-    required this.fat,
-    required this.quantity,
-  });
-
-  // JSON 직렬화 메서드 추가
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'carbs': carbs,
-    'protein': protein,
-    'fat': fat,
-    'quantity': quantity,
-  };
-
-  factory ConsumedFood.fromJson(Map<String, dynamic> json) {
-    return ConsumedFood(
-      name: json['name'],
-      carbs: json['carbs'],
-      protein: json['protein'],
-      fat: json['fat'],
-      quantity: json['quantity'],
     );
   }
 }
