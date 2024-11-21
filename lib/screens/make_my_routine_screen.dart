@@ -315,7 +315,6 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                     direction: DismissDirection.endToStart,
                     // 왼쪽으로 슬라이드만 허용
                     background: Container(
-                      color: Colors.red,
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: const Icon(
