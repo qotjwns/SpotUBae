@@ -25,7 +25,7 @@ class CalendarScreenState extends State<CalendarScreen> {
   DateTime _selectedDay = DateTime.now();
   final ExerciseLogStorageService _logStorageService =
   ExerciseLogStorageService();
-  ExerciseLog? _selectedDayExerciseLog;
+  List<ExerciseLog> _selectedDayExerciseLogs = [];
 
   Map<String, Map<String, MealLog>> _dietLogsByDate = {};
   Map<String, MealLog>? _selectedDayDietLog;
@@ -38,10 +38,10 @@ class CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _loadExerciseLogForSelectedDay() async {
-    ExerciseLog? log =
-    await _logStorageService.loadExerciseLogByDate(_selectedDay);
+    List<ExerciseLog> logs =
+    await _logStorageService.loadExerciseLogsByDate(_selectedDay);
     setState(() {
-      _selectedDayExerciseLog = log;
+      _selectedDayExerciseLogs = logs;
     });
   }
 
@@ -170,37 +170,45 @@ class CalendarScreenState extends State<CalendarScreen> {
                         ),
                       ),
                       Expanded(
-                        child: _selectedDayExerciseLog != null &&
-                            _selectedDayExerciseLog!.exercises.isNotEmpty
+                        child: _selectedDayExerciseLogs.isNotEmpty
                             ? ListView.builder(
-                          itemCount:
-                          _selectedDayExerciseLog!.exercises.length,
-                          itemBuilder: (context, index) {
-                            final exercise =
-                            _selectedDayExerciseLog!.exercises[index];
-                            return ListTile(
+                          itemCount: _selectedDayExerciseLogs.length,
+                          itemBuilder: (context, logIndex) {
+                            final log = _selectedDayExerciseLogs[logIndex];
+                            return ExpansionTile(
                               title: Text(
-                                exercise.name,
+                                'Log ${logIndex + 1} - ${DateFormat('HH:mm').format(log.timestamp)}',
                                 style: const TextStyle(
                                   decoration: TextDecoration.underline,
                                   fontSize: 16,
                                 ),
                               ),
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        ExerciseLogDetailScreen(
-                                          exercise: exercise,
-                                        ),
+                              children: log.exercises.map((exercise) {
+                                return ListTile(
+                                  title: Text(
+                                    exercise.name,
+                                    style: const TextStyle(
+                                      decoration: TextDecoration.underline,
+                                      fontSize: 16,
+                                    ),
                                   ),
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ExerciseLogDetailScreen(
+                                              exercise: exercise,
+                                            ),
+                                      ),
+                                    );
+                                  },
                                 );
-                              },
+                              }).toList(),
                             );
                           },
                         )
                             : const Center(
-                          child: Text('No workout log for this day'),
+                          child: Text('No workout logs for this day'),
                         ),
                       ),
                     ],

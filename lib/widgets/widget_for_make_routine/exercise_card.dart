@@ -10,6 +10,7 @@ class ExerciseCard extends StatefulWidget {
   final VoidCallback onDelete;
   final VoidCallback onSave;
   final ValueChanged<List<Map<String, int>>> onSetsUpdated; // 세트 업데이트 콜백
+  final ValueChanged<String> onNotesUpdated; // 메모 업데이트 콜백 추가
 
   const ExerciseCard({
     super.key,
@@ -17,6 +18,7 @@ class ExerciseCard extends StatefulWidget {
     required this.onDelete,
     required this.onSetsUpdated,
     required this.onSave,
+    required this.onNotesUpdated, // 메모 업데이트 콜백 전달
   });
 
   @override
@@ -25,11 +27,13 @@ class ExerciseCard extends StatefulWidget {
 
 class ExerciseCardState extends State<ExerciseCard> {
   late List<Map<String, int>> sets;
+  late String? notes; // 메모 상태 변수
 
   @override
   void initState() {
     super.initState();
     sets = List<Map<String, int>>.from(widget.exercise.sets);
+    notes = widget.exercise.notes;
   }
 
   void _addSet() {
@@ -76,6 +80,49 @@ class ExerciseCardState extends State<ExerciseCard> {
         );
       },
     );
+  }
+
+  // 메모 편집 다이얼로그 표시 메서드
+  Future<void> _editNotes() async {
+    String updatedNotes = notes ?? '';
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add/Edit Notes'),
+          content: TextField(
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'Please enter a note',
+            ),
+            controller: TextEditingController(text: updatedNotes),
+            onChanged: (value) {
+              updatedNotes = value;
+            },
+            maxLines: null,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // 취소
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // 저장
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    setState(() {
+      notes = updatedNotes.trim().isEmpty ? null : updatedNotes.trim();
+    });
+    widget.onNotesUpdated(notes ?? '');
   }
 
   @override
@@ -141,16 +188,43 @@ class ExerciseCardState extends State<ExerciseCard> {
               ],
             ),
             const SizedBox(height: 8),
+            // Notes 표시 및 편집 버튼
             Row(
               children: [
-                Chip(
-                  label: Text("최근: ${widget.exercise.recentRecord}"),
-                  backgroundColor: Colors.grey[200],
-                ),
-                const SizedBox(width: 10),
-                Chip(
-                  label: Text("추천: ${widget.exercise.recommendedRecord}"),
-                  backgroundColor: Colors.blue[100],
+                Expanded(
+                  child: notes != null
+                      ? GestureDetector(
+                    onTap: _editNotes, // 메모 수정
+                    child: Row(
+                      children: [
+                        const Icon(Icons.note, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            notes!,
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.black54),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const Icon(Icons.edit, color: Colors.blue, size: 16),
+                      ],
+                    ),
+                  )
+                      : GestureDetector(
+                    onTap: _editNotes, // 메모 추가
+                    child: Row(
+                      children: const [
+                        Icon(Icons.note_add, color: Colors.grey),
+                        SizedBox(width: 4),
+                        Text(
+                          'Add notes...',
+                          style: TextStyle(
+                              fontSize: 14, color: Colors.blue),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -162,7 +236,7 @@ class ExerciseCardState extends State<ExerciseCard> {
                   onPressed: _removeSet,
                 ),
                 Text(
-                  "세트 수: ${sets.length}",
+                  "Number of Sets: ${sets.length}",
                   style: const TextStyle(fontSize: 16),
                 ),
                 IconButton(
@@ -171,6 +245,7 @@ class ExerciseCardState extends State<ExerciseCard> {
                 ),
               ],
             ),
+            // 세트 리스트
             Column(
               children: List.generate(sets.length, (index) {
                 final set = sets[index];
@@ -178,6 +253,13 @@ class ExerciseCardState extends State<ExerciseCard> {
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                   child: Row(
                     children: [
+                      // 세트 번호 표시 추가
+                      Text(
+                        "Set ${index + 1}",
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: GestureDetector(
                           onTap: () async {
@@ -233,7 +315,7 @@ class ExerciseCardState extends State<ExerciseCard> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              '${set['reps']} 회',
+                              '${set['reps']} reps',
                               textAlign: TextAlign.center,
                             ),
                           ),

@@ -10,13 +10,13 @@ Future<bool> showConfirmationDialog(
         content: Text(content),
         actions: <Widget>[
           TextButton(
-            child: const Text('예'),
+            child: const Text('Yes'),
             onPressed: () {
               Navigator.of(context).pop(true);
             },
           ),
           TextButton(
-            child: const Text('아니오'),
+            child: const Text('No'),
             onPressed: () {
               Navigator.of(context).pop(false);
             },

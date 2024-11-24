@@ -6,6 +6,7 @@ import '../../models/message.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
 import '../workout_selection_screen.dart';
+import 'package:provider/provider.dart';
 
 class ChatBotScreen extends StatefulWidget {
   final String workoutType;  // 운동 부위 (예: chest, back, shoulder 등)
@@ -19,7 +20,6 @@ class ChatBotScreen extends StatefulWidget {
 class ChatBotScreenState extends State<ChatBotScreen> {
   final List<Message> _messages = [];
   final ScrollController _scrollController = ScrollController();
-  final StorageService _storageService = StorageService();
   late ApiService _apiService;
 
   bool _isLoading = false;
@@ -32,17 +32,25 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     'for expert'
   ];
 
+  late StorageService _storageService;
+
+  bool _isInit = false; // 초기화 여부 확인
+
   @override
-  void initState() {
-    super.initState();
-    _apiService = ApiService(
-        apiKey: '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');
-    _loadMessages();
-    _loadExercises();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInit) {
+      _storageService = Provider.of<StorageService>(context);
+      _apiService = ApiService(
+          apiKey: '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'); // 실제 API 키로 대체하세요
+      _loadMessages();
+      _loadExercises();
+      _isInit = true;
+    }
   }
 
   Future<void> _loadMessages() async {
-    List<Message> loadedMessages = await _storageService.loadMessages(widget.workoutType);
+    List<Message> loadedMessages = await _storageService.loadMessages(widget.workoutType.toLowerCase());
     setState(() {
       _messages.addAll(loadedMessages);
     });
@@ -63,7 +71,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
       setState(() {
         _messages.add(Message(
           role: 'assistant',
-          content: "recommendation 운동 종목 파일이 존재하지 않습니다.",
+          content: "Recommendation exercise file does not exist.",
           timestamp: DateTime.now(),
         ));
       });
@@ -104,40 +112,35 @@ class ChatBotScreenState extends State<ChatBotScreen> {
         });
       }
 
-      handleWorkoutResponse(botResponse, widget.workoutType);  // 운동 종목 처리
+      handleWorkoutResponse(botResponse, widget.workoutType.toLowerCase());  // 운동 종목 처리
     } catch (e) {
       if (mounted) {
         setState(() {
-          _addErrorMessage('챗봇 응답에 문제가 발생했습니다: $e');
+          _addErrorMessage('There was a problem with the chatbot response: $e');
         });
       }
     }
   }
 
   void handleWorkoutResponse(String response, String workoutType) async {
-    final StorageService storageService = StorageService();
-
     // 운동 종목 추출
-    List<String> matchingExercises = storageService.extractMatchingExercises(response, workoutType);
+    List<String> matchingExercises = _storageService.extractMatchingExercises(response, workoutType);
 
     if (matchingExercises.isNotEmpty) {
-      // 운동 종목 저장 (해당 부위)
-      await storageService.saveExercisesToDownload(matchingExercises, workoutType);
-      print("$workoutType 운동 종목이 성공적으로 저장되었습니다.");
+      // 운동 종목 저장 (해당 부위) - append
+      await _storageService.addExercisesToDownload(matchingExercises, workoutType);
+      print("$workoutType 운동 종목이 성공적으로 추가되었습니다.");
+
+      // recommendation 운동 종목 저장 (항상 "recommendation"으로 저장) - append
+      await _storageService.addExercisesToDownload(matchingExercises, "recommendation");
+      print("recommendation 운동 종목이 성공적으로 추가되었습니다.");
     } else {
       print("$workoutType 운동 종목 추출 실패! 응답 내용: $response");
-    }
-
-    // recommendation 운동 종목 저장 (항상 "recommendation"으로 저장)
-    List<String> recommendationExercises = storageService.extractMatchingExercises(response, workoutType);
-    if (recommendationExercises.isNotEmpty) {
-      await storageService.saveExercisesToDownload(recommendationExercises, "recommendation");
-      print("recommendation 운동 종목이 성공적으로 저장되었습니다.");
     }
   }
 
   void _saveMessages() {
-    _storageService.saveMessages(widget.workoutType, _messages);  // 운동 부위별로 메시지 저장
+    _storageService.saveMessages(widget.workoutType.toLowerCase(), _messages);  // 운동 부위별로 메시지 저장
   }
 
   void _addErrorMessage(String error) {
@@ -244,7 +247,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   void _navigateToWorkoutSelectionScreen() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => WorkoutSelectionScreen(workoutType: widget.workoutType,),
+        builder: (context) => const WorkoutSelectionScreen(),
       ),
     );
   }
@@ -252,17 +255,17 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   void _resetChat() async {
     bool confirm = await _showConfirmationDialog(
       context,
-      '채팅 초기화',
-      '모든 채팅을 삭제하시겠습니까?',
+      'Reset Chat',
+      'Do you want to delete all chat messages?',
     );
 
     if (confirm) {
-      await _storageService.deleteMessages(widget.workoutType);
+      await _storageService.deleteMessages(widget.workoutType.toLowerCase());
       setState(() {
         _messages.clear();
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('채팅이 초기화되었습니다.')),
+        const SnackBar(content: Text('Chat has been reset.')),
       );
     }
   }
@@ -271,9 +274,9 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${_capitalize(widget.workoutType)} 부위 챗봇'),
+        title: Text('${_capitalize(widget.workoutType)} Workout Chatbot'),
         actions: [
-          IconButton(onPressed: _resetChat, icon: Icon(Icons.refresh)),
+          IconButton(onPressed: _resetChat, icon: const Icon(Icons.refresh)),
           IconButton(
             icon: const Icon(Icons.fitness_center),
             onPressed: _navigateToWorkoutSelectionScreen,
@@ -297,5 +300,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
       ),
     );
   }
-  String _capitalize(String s) => s[0].toUpperCase() + s.substring(1);
+
+  String _capitalize(String s) =>
+      s.isNotEmpty ? s[0].toUpperCase() + s.substring(1) : s;
 }

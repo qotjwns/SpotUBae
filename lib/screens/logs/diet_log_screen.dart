@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../models/meal_log.dart'; // MealLog 임포트
-import '../../models/consumed_food.dart'; // ConsumedFood 임포트
-import '../../services/food_service.dart'; // FoodService 임포트
+import '../../models/meal_log.dart';
+import '../../models/consumed_food.dart';
+import '../../services/food_service.dart';
+import '../../widgets/widget_for_diet_log_screen/serving_size_dialog.dart';
 
 class DietLogScreen extends StatefulWidget {
   final DateTime selectedDay;
@@ -90,26 +91,26 @@ class DietLogScreenState extends State<DietLogScreen> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text('$meal 추가'),
+          title: Text('$meal'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('해당 끼니를 드셨나요?'),
+              const Text('Did you have a meal?'),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(dialogContext).pop(false); // '예' 선택
+                      Navigator.of(dialogContext).pop(false); // 'Yes' 선택
                     },
-                    child: const Text('예'),
+                    child: const Text('Yes'),
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(dialogContext).pop(true); // '아니요' 선택
+                      Navigator.of(dialogContext).pop(true); // 'No' 선택
                     },
-                    child: const Text('아니요'),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    child: const Text('No'),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red[200]),
                   ),
                 ],
               ),
@@ -180,16 +181,14 @@ class DietLogScreenState extends State<DietLogScreen> {
                       ? const Center(child: Text('No results found.'))
                       : ListView.builder(
                     itemCount: searchResults.length,
-                    itemBuilder:
-                        (BuildContext listContext, int index) {
+                    itemBuilder: (BuildContext listContext, int index) {
                       final food = searchResults[index];
                       return ListTile(
                         leading: Image.network(food['photo']),
                         title: Text(food['food_name']),
                         onTap: () async {
                           Navigator.pop(sheetContext); // BottomSheet 닫기
-                          final nutrients =
-                          await _foodService.getFoodNutrients(food['food_name']);
+                          final nutrients = await _foodService.getFoodNutrients(food['food_name']);
                           _showQuantitySliderDialog(meal, nutrients);
                         },
                       );
@@ -205,66 +204,38 @@ class DietLogScreenState extends State<DietLogScreen> {
   }
 
   /// 섭취량 선택 다이얼로그 표시
-  void _showQuantitySliderDialog(String meal, Map<String, dynamic> food) {
+  void _showQuantitySliderDialog(String meal, Map<String, dynamic> food) async {
     double servingSize = 1.0; // 기본값
 
-    showDialog(
+    final updatedServingSize = await showDialog<double>(
       context: context,
       builder: (BuildContext dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text('${food['food_name']} 섭취량 선택'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('인분 수: ${servingSize.toStringAsFixed(1)}'),
-                  Slider(
-                    value: servingSize,
-                    min: 0.5,
-                    max: 3.0,
-                    divisions: 5,
-                    label: '${servingSize.toStringAsFixed(1)} 인분',
-                    onChanged: (value) {
-                      setState(() {
-                        servingSize = value;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: const Text('취소'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    _addFoodToDietLog(meal, food, servingSize);
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: const Text('추가'),
-                ),
-              ],
-            );
-          },
+        return ServingSizeDialog(
+          foodName: food['food_name'],
+          initialServingSize: servingSize,
         );
       },
     );
+
+    if (updatedServingSize != null) {
+      _addFoodToDietLog(meal, food, updatedServingSize);
+    }
   }
 
-  void _addFoodToDietLog(
-      String meal, Map<String, dynamic> food, double servingSize) {
-    final double quantityInGrams = food['serving_weight_grams'] * servingSize;
+  void _addFoodToDietLog(String meal, Map<String, dynamic> food, double servingSize) {
+    final double servingWeightGrams = (food['serving_weight_grams'] as num).toDouble();
+    final double quantityInGrams = servingWeightGrams * servingSize;
 
     final consumedFood = ConsumedFood(
       name: food['food_name'],
+      carbsPerServing: (food['carbs'] as num).toDouble(),
+      proteinPerServing: (food['protein'] as num).toDouble(),
+      fatPerServing: (food['fat'] as num).toDouble(),
       carbs: (food['carbs'] as num).toDouble() * servingSize,
       protein: (food['protein'] as num).toDouble() * servingSize,
       fat: (food['fat'] as num).toDouble() * servingSize,
       quantity: quantityInGrams, // 그램 단위로 저장
+      servingWeightGrams: servingWeightGrams, // 1회 제공량 저장
     );
 
     setState(() {
@@ -304,66 +275,41 @@ class DietLogScreenState extends State<DietLogScreen> {
   }
 
   /// 특정 음식 수정
-  void _editFoodInDietLog(String meal, int index) {
+  void _editFoodInDietLog(String meal, int index) async {
     final consumedFood = _dietLogs[meal]!.foods[index];
-    double servingSize = consumedFood.quantity / consumedFood.carbs;
+    double servingSize = consumedFood.quantity / consumedFood.servingWeightGrams;
 
-    showDialog(
+    // servingSize가 Slider의 범위를 벗어나지 않도록 클램핑
+    servingSize = servingSize.clamp(0.5, 3.0).toDouble();
+
+    // 다이얼로그에서 수정된 servingSize를 반환받기 위해 await 사용
+    final updatedServingSize = await showDialog<double>(
       context: context,
       builder: (BuildContext dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text('${consumedFood.name} 수정'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('인분 수: ${servingSize.toStringAsFixed(1)}'),
-                  Slider(
-                    value: servingSize,
-                    min: 0.5,
-                    max: 3.0,
-                    divisions: 5,
-                    label: '${servingSize.toStringAsFixed(1)} 인분',
-                    onChanged: (value) {
-                      setState(() {
-                        servingSize = value;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _dietLogs[meal]!.foods[index] = ConsumedFood(
-                        name: consumedFood.name,
-                        carbs: (consumedFood.carbs * servingSize).toDouble(),
-                        protein:
-                        (consumedFood.protein * servingSize).toDouble(),
-                        fat: (consumedFood.fat * servingSize).toDouble(),
-                        quantity:
-                        (consumedFood.quantity * servingSize).toDouble(),
-                      );
-                      _dietLogs[meal]!.isSkipped = false; // 수정 시 skipped 상태 해제
-                    });
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: const Text('수정'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: const Text('취소'),
-                ),
-              ],
-            );
-          },
+        return ServingSizeDialog(
+          foodName: consumedFood.name,
+          initialServingSize: servingSize,
         );
       },
     );
+
+    if (updatedServingSize != null) {
+      setState(() {
+        // ConsumedFood 객체를 업데이트
+        _dietLogs[meal]!.foods[index] = ConsumedFood(
+          name: consumedFood.name,
+          carbsPerServing: consumedFood.carbsPerServing,
+          proteinPerServing: consumedFood.proteinPerServing,
+          fatPerServing: consumedFood.fatPerServing,
+          carbs: consumedFood.carbsPerServing * updatedServingSize,
+          protein: consumedFood.proteinPerServing * updatedServingSize,
+          fat: consumedFood.fatPerServing * updatedServingSize,
+          quantity: consumedFood.servingWeightGrams * updatedServingSize,
+          servingWeightGrams: consumedFood.servingWeightGrams, // 유지
+        );
+        _dietLogs[meal]!.isSkipped = false; // 수정 시 skipped 상태 해제
+      });
+    }
   }
 
   /// 하루 총 영양소 계산
@@ -393,8 +339,7 @@ class DietLogScreenState extends State<DietLogScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title:
-        Text('Diet Log - ${widget.selectedDay.toLocal()}'.split(' ')[0]),
+        title: Text('Diet Log - ${widget.selectedDay.toLocal()}'.split(' ')[0]),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
@@ -461,7 +406,7 @@ class DietLogScreenState extends State<DietLogScreen> {
                               ),
                               if (mealLog.isSkipped)
                                 const Text(
-                                  '음식을 안 먹었다',
+                                  'No Food Consumed',
                                   style: TextStyle(
                                       color: Colors.red,
                                       fontWeight: FontWeight.bold),
@@ -518,7 +463,7 @@ class DietLogScreenState extends State<DietLogScreen> {
                               : const Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Text(
-                              '음식을 추가해주세요.',
+                              'Please add food.',
                               style: TextStyle(color: Colors.grey),
                             ),
                           ),
@@ -537,7 +482,7 @@ class DietLogScreenState extends State<DietLogScreen> {
                             },
                             icon: const Icon(Icons.add),
                             label: Text(mealLog.isSkipped
-                                ? '음식 추가하기'
+                                ? 'Add Food'
                                 : 'Add Food'),
                           ),
                         ),

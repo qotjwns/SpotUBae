@@ -1,12 +1,13 @@
+// workout_selection_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:group_app/screens/make_my_routine_screen.dart';
+import 'package:provider/provider.dart';
 import '../services/storage_service.dart';
 import '../models/exercise.dart';
 
 class WorkoutSelectionScreen extends StatefulWidget {
-  final String workoutType; // 운동 부위
-
-  const WorkoutSelectionScreen({super.key, required this.workoutType});
+  const WorkoutSelectionScreen({super.key});
 
   @override
   State<WorkoutSelectionScreen> createState() => _WorkoutSelectionScreenState();
@@ -14,31 +15,59 @@ class WorkoutSelectionScreen extends StatefulWidget {
 
 class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final StorageService _storageService = StorageService();
+  late StorageService _storageService;
+
+  final List<String> _allCategories = [
+    "recommendation",
+    "bookmarks",
+    "chest",
+    "back",
+    "shoulder",
+    "legs",
+    "arms",
+    "abs",
+    "cardio",
+  ];
 
   List<String> _filteredWorkouts = [];
   Set<String> selectedWorkouts = {};
-  String _selectedCategory = "recommendation"; // 기본 카테고리 설정
+  String _selectedCategory = "recommendation";
 
-  List<String> _recommendationWorkouts = [];
-  List<String> _currentWorkoutCategoryWorkouts = [];
+  Map<String, List<String>> _categoryWorkouts = {};
+  Set<String> _bookmarkedWorkouts = {};
+
+  bool _isInit = false; // To check if initialization has been done
 
   @override
-  void initState() {
-    super.initState();
-    _loadWorkouts(widget.workoutType); // 운동 목록 로드
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInit) {
+      _storageService = Provider.of<StorageService>(context);
+      _loadAllWorkouts(); // Load workout list
+      _loadBookmarks(); // Load bookmarked workouts
+      _isInit = true;
+    }
   }
 
-  Future<void> _loadWorkouts(String workoutType) async {
-    List<String> categoryWorkouts =
-    _storageService.getWorkoutsByCategory(workoutType);
-    _currentWorkoutCategoryWorkouts = categoryWorkouts;
-
-    List<String> recommendationWorkouts =
-    await _storageService.loadExercisesFromDownload("recommendation");
-    _recommendationWorkouts = recommendationWorkouts;
-
+  Future<void> _loadAllWorkouts() async {
+    for (String category in _allCategories) {
+      if (category == "bookmarks") {
+        // Bookmarks are managed separately
+        continue;
+      }
+      List<String> workouts = await _storageService.loadExercisesFromDownload(category);
+      _categoryWorkouts[category] = workouts;
+      print("Loaded workouts for $category: $workouts"); // Debugging
+    }
     _updateFilteredWorkouts();
+  }
+
+  Future<void> _loadBookmarks() async {
+    List<String> bookmarks = await _storageService.loadBookmarks();
+    setState(() {
+      _bookmarkedWorkouts = bookmarks.toSet();
+    });
+    print("Loaded bookmarks: $_bookmarkedWorkouts"); // Debugging
   }
 
   void _filterWorkouts(String query) {
@@ -47,20 +76,18 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
 
   void _updateFilteredWorkouts({String query = ''}) {
     List<String> workoutsToFilter;
-
-    if (_selectedCategory == "recommendation") {
-      workoutsToFilter = _recommendationWorkouts
-          .where((workout) => _currentWorkoutCategoryWorkouts.contains(workout))
-          .toList();
+    if (_selectedCategory == "bookmarks") {
+      workoutsToFilter = _bookmarkedWorkouts.toList();
     } else {
-      workoutsToFilter = List.from(_currentWorkoutCategoryWorkouts);
+      workoutsToFilter = _categoryWorkouts[_selectedCategory] ?? [];
     }
+    print("Category: $_selectedCategory, Workouts: $workoutsToFilter"); // Debugging
 
     if (query.isNotEmpty) {
       workoutsToFilter = workoutsToFilter
-          .where(
-              (workout) => workout.toLowerCase().contains(query.toLowerCase()))
+          .where((workout) => workout.toLowerCase().contains(query.toLowerCase()))
           .toList();
+      print("Filtered Workouts with query '$query': $workoutsToFilter"); // Debugging
     }
 
     setState(() {
@@ -78,12 +105,13 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
   void _navigateToMakeMyRoutineScreen() {
     List<Exercise> selectedExercises = selectedWorkouts.map((workoutName) {
       return Exercise(
+        id: UniqueKey().toString(), // 고유 ID 생성
         name: workoutName,
         sets: [],
-        recentRecord: '0kg x 0회',
-        recommendedRecord: '0kg x 0회',
+        notes: null, // 메모 초기화
       );
     }).toList();
+
 
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -94,23 +122,94 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
     );
   }
 
+  void _toggleBookmark(String workout) async {
+    setState(() {
+      if (_bookmarkedWorkouts.contains(workout)) {
+        _bookmarkedWorkouts.remove(workout);
+      } else {
+        _bookmarkedWorkouts.add(workout);
+      }
+    });
+    await _storageService.saveBookmarks(_bookmarkedWorkouts.toList());
+    print("Updated bookmarks: $_bookmarkedWorkouts"); // Debugging
+  }
+
+  // Method to reset "recommendation"
+  void _resetRecommendation() async {
+    bool confirm = await _showConfirmationDialog(
+      context,
+      'Reset Recommendation',
+      'Do you want to reset the recommendation exercise list?',
+    );
+
+    if (confirm) {
+      // Reset to default recommendation exercises
+      List<String> defaultRecommendations = [
+        // Add default recommendation exercises here
+        // Example:
+        // "Push Up",
+        // "Pull Up",
+        // "Squat",
+      ];
+      await _storageService.setExercisesToDownload(defaultRecommendations, "recommendation");
+      await _loadAllWorkouts(); // Reload workout list
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Recommendation exercise list has been reset.')),
+      );
+    }
+  }
+
+  Future<bool> _showConfirmationDialog(
+      BuildContext context, String title, String content) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(content),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Yes'),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+            TextButton(
+              child: const Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+          ],
+        );
+      },
+    ) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("루틴 만들기 - ${_capitalize(widget.workoutType)}"),
+        title: const Text("Select your Exercises"),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _resetRecommendation,
+            tooltip: 'Reset Recommendation',
+          ),
           IconButton(
             icon: const Icon(Icons.fitness_center),
             onPressed: selectedWorkouts.isNotEmpty
                 ? _navigateToMakeMyRoutineScreen
-                : null, // 선택된 운동이 있을 때만 활성화
+                : null,
+            tooltip: 'Create Routine',
           ),
         ],
       ),
       body: Column(
         children: [
-          // 운동 검색 필드
+          // Exercise search field
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
@@ -118,55 +217,53 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
               onChanged: _filterWorkouts,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
-                hintText: "운동 검색...",
+                hintText: "Search Exercises...",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
             ),
           ),
-          // 카테고리 선택 필터
+          // Category selection filter
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildCategoryButton("recommendation", "추천"),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildCategoryButton(
-                    widget.workoutType,
-                    _capitalize(widget.workoutType),
-                  ),
-                ),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: _allCategories.map((category) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: ChoiceChip(
+                      label: category == "bookmarks"
+                          ? Tooltip(
+                        message: "Bookmarks",
+                        child: Icon(Icons.bookmark),
+                      )
+                          : Text(_capitalize(category)),
+                      selected: _selectedCategory == category,
+                      onSelected: (_) {
+                        _onCategorySelected(category);
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
           ),
           const SizedBox(height: 8),
-          // 운동 리스트
+          // Workout list
           Expanded(
             child: _filteredWorkouts.isNotEmpty
                 ? ListView.builder(
               itemCount: _filteredWorkouts.length,
               itemBuilder: (context, index) {
                 final workout = _filteredWorkouts[index];
+                bool isBookmarked = _bookmarkedWorkouts.contains(workout);
+                bool isSelected = selectedWorkouts.contains(workout);
                 return ListTile(
                   title: Text(workout),
-                  tileColor: selectedWorkouts.contains(workout)
-                      ? Colors.grey.withOpacity(0.1)
-                      : null,
-                  onTap: () {
-                    setState(() {
-                      if (selectedWorkouts.contains(workout)) {
-                        selectedWorkouts.remove(workout);
-                      } else {
-                        selectedWorkouts.add(workout);
-                      }
-                    });
-                  },
-                  trailing: Checkbox(
-                    value: selectedWorkouts.contains(workout),
+                  leading: Checkbox(
+                    value: isSelected,
                     onChanged: (bool? selected) {
                       setState(() {
                         if (selected == true) {
@@ -177,25 +274,33 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
                       });
                     },
                   ),
+                  trailing: IconButton(
+                    icon: Icon(
+                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                      color: isBookmarked ? Colors.black : null,
+                    ),
+                    onPressed: () {
+                      _toggleBookmark(workout);
+                    },
+                  ),
+                  onTap: () {
+                    setState(() {
+                      if (isSelected) {
+                        selectedWorkouts.remove(workout);
+                      } else {
+                        selectedWorkouts.add(workout);
+                      }
+                    });
+                  },
                 );
               },
             )
                 : const Center(
-              child: Text("운동을 찾을 수 없습니다."),
+              child: Text("No exercises found."),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildCategoryButton(String category, String label) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: _selectedCategory == category,
-      onSelected: (_) {
-        _onCategorySelected(category);
-      },
     );
   }
 
