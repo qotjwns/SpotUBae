@@ -13,7 +13,7 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          '개인정보',
+          'Profile',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 24,
@@ -30,7 +30,7 @@ class ProfileScreen extends StatelessWidget {
                 children: <Widget>[
                   const Center(
                     child: Text(
-                      '사용자 데이터',
+                      'User Data',
                       style:
                       TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
@@ -53,14 +53,15 @@ class ProfileScreen extends StatelessWidget {
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          LegendItem(color: Colors.blue, label: '무게'),
+                          LegendItem(color: Colors.blue, label: 'Weight'),
                           SizedBox(width: 20),
-                          LegendItem(color: Colors.red, label: '체지방'),
+                          LegendItem(color: Colors.red, label: 'Body Fat'),
                         ],
                       ),
                     ],
                   )
-                      : const Text('데이터를 입력해주세요'),
+                      : const Text('Enter your weight and body fat and save it',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),

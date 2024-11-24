@@ -50,7 +50,7 @@ class UserDataFormState extends State<UserDataForm> {
 
   Future<void> _saveUserData() async {
     if (_weightController.text.isEmpty || _bodyFatController.text.isEmpty) {
-      _showSnackBar('모든 필드를 입력해주세요');
+      _showSnackBar('Please fill out all fields');
       return;
     }
 
@@ -58,12 +58,12 @@ class UserDataFormState extends State<UserDataForm> {
     final bodyFat = int.tryParse(_bodyFatController.text);
 
     if (weight == null || bodyFat == null) {
-      _showSnackBar('유효한 숫자를 입력해주세요');
+      _showSnackBar('Please enter a valid number');
       return;
     }
 
     if (weight <= 0 || bodyFat < 0 || bodyFat > 100) {
-      _showSnackBar('현실적인 값을 입력해주세요');
+      _showSnackBar('Please enter realistic values');
       return;
     }
 
@@ -85,7 +85,7 @@ class UserDataFormState extends State<UserDataForm> {
     await prefs.setString('user_data', jsonString);
 
     if (!mounted) return;
-    _showSnackBar('데이터가 성공적으로 저장되었습니다');
+    _showSnackBar('Your data has been saved successfully');
 
     _weightController.clear();
     _bodyFatController.clear();
@@ -101,22 +101,22 @@ class UserDataFormState extends State<UserDataForm> {
   void _validateInputs() {
     setState(() {
       if (_weightController.text.isEmpty) {
-        _weightError = '무게를 입력해주세요';
+        _weightError = 'Input your weight';
       } else {
         final weight = int.tryParse(_weightController.text);
         if (weight == null || weight <= 0) {
-          _weightError = '유효한 무게를 입력해주세요';
+          _weightError = 'Please enter a valid weight';
         } else {
           _weightError = null;
         }
       }
 
       if (_bodyFatController.text.isEmpty) {
-        _bodyFatError = '체지방을 입력해주세요';
+        _bodyFatError = 'Input your body fat';
       } else {
         final bodyFat = int.tryParse(_bodyFatController.text);
         if (bodyFat == null || bodyFat < 0 || bodyFat > 100) {
-          _bodyFatError = '유효한 체지방을 입력해주세요';
+          _bodyFatError = 'Please enter a valid body fat';
         } else {
           _bodyFatError = null;
         }
@@ -132,8 +132,8 @@ class UserDataFormState extends State<UserDataForm> {
 
     bool confirm = await showConfirmationDialog(
       context,
-      '그래프 초기화',
-      '모든 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+      'Graph initialization',
+      'Do you want to reset all data?\nThis action is irreversible.',
     );
 
     if (confirm) {
@@ -158,7 +158,7 @@ class UserDataFormState extends State<UserDataForm> {
           child: Row(
             children: <Widget>[
               NumberInputBox(
-                labelText: '무게 (KG)',
+                labelText: 'Weight (KG)',
                 controller: _weightController,
                 onChanged: (value) {
                   _validateInputs();
@@ -168,7 +168,7 @@ class UserDataFormState extends State<UserDataForm> {
               ),
               const SizedBox(width: 20),
               NumberInputBox(
-                labelText: '체지방 (%)',
+                labelText: 'Body Fat (%)',
                 controller: _bodyFatController,
                 onChanged: (value) {
                   _validateInputs();
@@ -193,7 +193,7 @@ class UserDataFormState extends State<UserDataForm> {
               ),
               onPressed: _isSaveEnabled ? _saveUserData : null,
               child: const Text(
-                '저장',
+                'Save',
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 20,
@@ -212,7 +212,7 @@ class UserDataFormState extends State<UserDataForm> {
               ),
               onPressed: _resetUserData,
               child: const Text(
-                '그래프 초기화',
+                'Graph initialization',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,

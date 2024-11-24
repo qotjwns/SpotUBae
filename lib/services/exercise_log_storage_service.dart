@@ -9,18 +9,14 @@ class ExerciseLogStorageService {
     final prefs = await SharedPreferences.getInstance();
     List<ExerciseLog> currentLogs = await loadAllExerciseLogs();
 
-    int existingIndex = currentLogs.indexWhere(
-            (existingLog) => isSameDate(existingLog.date, log.date));
-    if (existingIndex >= 0) {
-      currentLogs[existingIndex] = log;
-    } else {
-      currentLogs.add(log);
-    }
+    // 기존 로직을 제거하고 항상 새로운 로그를 추가
+    currentLogs.add(log);
 
     String jsonString =
     json.encode(currentLogs.map((log) => log.toJson()).toList());
     await prefs.setString(exerciseLogKey, jsonString);
   }
+
 
   Future<List<ExerciseLog>> loadAllExerciseLogs() async {
     final prefs = await SharedPreferences.getInstance();
@@ -33,11 +29,9 @@ class ExerciseLogStorageService {
     }
   }
 
-  Future<ExerciseLog?> loadExerciseLogByDate(DateTime date) async {
+  Future<List<ExerciseLog>> loadExerciseLogsByDate(DateTime date) async {
     List<ExerciseLog> allLogs = await loadAllExerciseLogs();
-    return allLogs.firstWhere(
-            (log) => isSameDate(log.date, date),
-        orElse: () => ExerciseLog(date: date, exercises: []));
+    return allLogs.where((log) => isSameDate(log.date, date)).toList();
   }
 
   bool isSameDate(DateTime date1, DateTime date2) {

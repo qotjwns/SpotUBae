@@ -57,7 +57,7 @@ class NumberInputBox extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    labelText.endsWith('Fat') ? '%' : 'KG',
+                    labelText.endsWith('Fat (%)') ? '%' : 'KG',
                     style: const TextStyle(color: Colors.black, fontSize: 14),
                   ),
                 ],
