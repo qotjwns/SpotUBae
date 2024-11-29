@@ -65,24 +65,28 @@ class HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 120,
-        title: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'SpotU',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 50,
-                fontStyle: FontStyle.italic,
+        toolbarHeight: 120, // AppBar의 높이 설정
+        centerTitle: true, // 제목을 중앙에 배치
+        title: Padding(
+          padding: const EdgeInsets.only(top: 20.0), // 제목을 아래로 내리기 위한 상단 패딩
+          child: Row(
+            mainAxisSize: MainAxisSize.min, // Row의 크기를 자식 위젯에 맞게 축소
+            mainAxisAlignment: MainAxisAlignment.center, // Row 내부 위젯을 중앙에 정렬
+            children: [
+              Text(
+                'SpotU',
+                style: TextStyle(
+                  fontSize: 50, // 텍스트 크기 조정
+                  fontWeight: FontWeight.bold, // 텍스트 두께 조정
+                ),
               ),
-            ),
-            SizedBox(width: 20), // 텍스트와 아이콘 사이 간격
-            FaIcon(
-              FontAwesomeIcons.dumbbell,
-              size: 40, // 아이콘 크기
-            ),
-          ],
+              SizedBox(width: 20), // 텍스트와 아이콘 사이 간격
+              FaIcon(
+                FontAwesomeIcons.dumbbell,
+                size: 40, // 아이콘 크기 조정
+              ),
+            ],
+          ),
         ),
       ),
       body: SingleChildScrollView(

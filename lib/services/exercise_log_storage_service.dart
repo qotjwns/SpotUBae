@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/exercise_log.dart';
+import '../screens/logs/exercise_log.dart';
 
 class ExerciseLogStorageService {
   static const String exerciseLogKey = 'exercise_logs';

@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.7.10'  // Kotlin 버전 수정
+    ext.kotlin_version = '1.6.10'  // Kotlin 버전 수정
     repositories {
         google()
         mavenCentral()
@@ -37,8 +37,10 @@ android {
         applicationId = "com.example.group_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 21
-        targetSdk = flutter.targetSdkVersion
+        defaultConfig {
+            minSdkVersion 21
+            targetSdkVersion 33
+        }
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

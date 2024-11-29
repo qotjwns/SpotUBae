@@ -1,24 +1,41 @@
-import 'package:group_app/services/storage_service.dart';
+// lib/services/chatbot_service.dart
 
-import '../models/message.dart';  // StorageService 임포트
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class ChatBotStorageService {
-  final StorageService _storageService = StorageService(); // StorageService 인스턴스 사용
+class ChatBotService with ChangeNotifier {
+  final String apiKey;
 
-  // 운동 종목을 불러오는 메서드 (StorageService의 메서드 활용)
-  Future<List<String>> loadExercisesFromDownload(String workoutType) async {
-    // StorageService의 loadExercisesFromDownload 메서드를 호출하여 운동 종목 불러오기
-    return await _storageService.loadExercisesFromDownload(workoutType);
-  }
+  ChatBotService({required this.apiKey});
 
-  // 메시지 저장 메서드
-  Future<void> saveMessages(String workoutType, List<Message> messages) async {
-    // 저장 로직
-  }
+  /// 챗봇에게 프롬프트를 보내고 응답을 받는 메서드
+  Future<String> sendPrompt(String prompt) async {
+    final url = Uri.parse('https://api.openai.com/v1/chat/completions');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $apiKey',
+    };
 
-  // 메시지 불러오기 메서드
-  Future<List<Message>> loadMessages(String workoutType) async {
-    // 불러오기 로직
-    return [];
+    final body = jsonEncode({
+      "model": "gpt-4",
+      "messages": [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": prompt},
+      ],
+    });
+
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['choices'][0]['message']['content'].trim();
+      } else {
+        return '챗봇과의 통신에 실패했습니다. 상태 코드: ${response.statusCode}';
+      }
+    } catch (e) {
+      return '챗봇과의 통신 중 오류가 발생했습니다: $e';
+    }
   }
 }

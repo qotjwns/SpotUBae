@@ -278,7 +278,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
         actions: [
           IconButton(onPressed: _resetChat, icon: const Icon(Icons.refresh)),
           IconButton(
-            icon: const Icon(Icons.fitness_center),
+            icon: const Icon(Icons.arrow_forward),
             onPressed: _navigateToWorkoutSelectionScreen,
           ),
         ],
