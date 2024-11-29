@@ -1,10 +1,15 @@
-// make_my_routine_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:qr_flutter/qr_flutter.dart'; // QR 코드 생성 기능을 위해 추가
+import 'dart:ui' as ui;
+import 'dart:typed_data';
+import 'dart:async';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+
 import '../models/exercise.dart';
-import '../models/exercise_log.dart';
+import 'logs/exercise_log.dart';
 import '../services/routine_storage_service.dart';
 import '../services/exercise_log_storage_service.dart';
 import '../widgets/widget_for_make_routine/exercise_card.dart';
@@ -21,8 +26,7 @@ class MakeMyRoutineScreen extends StatefulWidget {
 class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   List<Exercise> _exercises = [];
   final RoutineStorageService _storageService = RoutineStorageService();
-  final ExerciseLogStorageService _logStorageService =
-  ExerciseLogStorageService();
+  final ExerciseLogStorageService _logStorageService = ExerciseLogStorageService();
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   Duration _timerDuration = const Duration(minutes: 1);
@@ -92,7 +96,6 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
-
   Future<void> _saveExerciseLog() async {
     DateTime now = DateTime.now();
     DateTime dateOnly = DateTime(now.year, now.month, now.day);
@@ -107,7 +110,6 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
     await _logStorageService.saveExerciseLog(log);
     print("Exercise log has been saved: ${log.toJson()}");
   }
-
 
   void _updateSets(int index, List<Map<String, int>> sets) {
     setState(() {
@@ -196,7 +198,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
         id: _exercises[index].id,
         name: _exercises[index].name,
         sets: _exercises[index].sets,
-        notes: newNotes
+        notes: newNotes,
       );
     });
   }
@@ -289,6 +291,17 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
     }
   }
 
+
+
+
+  // QR 코드 이미지를 파일로 저장하는 함수
+  Future<String> _saveQrCodeToFile(Uint8List data) async {
+    final directory = await getTemporaryDirectory();
+    final filePath = '${directory.path}/routine_qr_code.png';
+    final file = await File(filePath).writeAsBytes(data);
+    return file.path;
+  }
+
   @override
   void dispose() {
     _audioPlayer.dispose();
@@ -371,7 +384,8 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                                 // ExerciseCard 내부에서도 동일한 AlertDialog 표시
                                 await _showExitConfirmationDialog();
                               },
-                              onNotesUpdated: (notes) => _updateNotes(index, notes), // 메모 업데이트 콜백 추가
+                              onNotesUpdated: (notes) =>
+                                  _updateNotes(index, notes), // 메모 업데이트 콜백 추가
                             ),
                           ),
                         ],

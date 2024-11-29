@@ -3,6 +3,7 @@ import 'package:group_app/screens/main_screens/profile_screen/user_data_chart.da
 import 'package:group_app/screens/main_screens/profile_screen/user_data_form.dart';
 import 'package:provider/provider.dart';
 import '../../../services/user_data_manage_service.dart';
+import '../../photo_diary_screen.dart';
 import 'legend_item.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -12,11 +13,16 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Profile',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
+        toolbarHeight: 100, // 기본 높이보다 크게 설정 (필요에 따라 조정)
+        centerTitle: true, // 제목을 중앙에 배치
+        title: const Padding(
+          padding: EdgeInsets.only(top: 20.0), // 제목을 아래로 내리기 위한 상단 패딩 (필요에 따라 조정)
+          child: Text(
+            'Profile',
+            style: TextStyle(
+              fontSize: 36, // 텍스트 크기 조정 (필요에 따라 조정)
+              fontWeight: FontWeight.bold, // 텍스트 두께 조정
+            ),
           ),
         ),
       ),
@@ -60,8 +66,23 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ],
                   )
-                      : const Text('Enter your weight and body fat and save it',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      : const Text(
+                    'Enter your weight and body fat and save it',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  // 새로 추가된 버튼
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PhotoDiaryScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text('Open Photo Diary'),
+                  ),
                 ],
               ),
             ),

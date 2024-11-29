@@ -1,6 +1,6 @@
 // models/exercise_log.dart
 
-import 'exercise.dart';
+import '../../models/exercise.dart';
 
 class ExerciseLog {
   final DateTime date;

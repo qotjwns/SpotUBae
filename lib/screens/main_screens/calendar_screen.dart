@@ -1,13 +1,14 @@
 // lib/screens/calendar_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../models/meal_log.dart'; // MealLog 임포트
+import '../logs/meal_log.dart'; // MealLog 임포트
 import '../../models/consumed_food.dart'; // ConsumedFood 임포트
-import '../../models/exercise_log.dart';
+import '../logs/exercise_log.dart';
 import '../../services/exercise_log_storage_service.dart';
 import '../logs/diet_log_screen.dart';
 import '../logs/exercise_log_detail_screen.dart';
@@ -23,23 +24,43 @@ class CalendarScreenState extends State<CalendarScreen> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
-  final ExerciseLogStorageService _logStorageService =
-  ExerciseLogStorageService();
+  final ExerciseLogStorageService _logStorageService = ExerciseLogStorageService();
   List<ExerciseLog> _selectedDayExerciseLogs = [];
 
-  Map<String, Map<String, MealLog>> _dietLogsByDate = {};
-  Map<String, MealLog>? _selectedDayDietLog;
+  Map<String, List<MealLog>> _dietLogsByDate = {};
+  List<MealLog>? _selectedDayDietLog;
+
+  // **추가: 운동 로그를 날짜별로 저장하는 Map**
+  Map<String, List<ExerciseLog>> _exerciseLogsByDate = {};
 
   @override
   void initState() {
     super.initState();
     _loadExerciseLogForSelectedDay();
     _loadDietLogForSelectedDay();
+    _loadAllExerciseLogs(); // **추가: 모든 운동 로그 로드**
+  }
+
+  // **추가: 모든 운동 로그를 불러와 날짜별로 매핑**
+  Future<void> _loadAllExerciseLogs() async {
+    List<ExerciseLog> allLogs = await _logStorageService.loadAllExerciseLogs();
+    Map<String, List<ExerciseLog>> logsByDate = {};
+
+    for (var log in allLogs) {
+      String dateKey = _getDateKey(log.timestamp);
+      if (!logsByDate.containsKey(dateKey)) {
+        logsByDate[dateKey] = [];
+      }
+      logsByDate[dateKey]!.add(log);
+    }
+
+    setState(() {
+      _exerciseLogsByDate = logsByDate;
+    });
   }
 
   void _loadExerciseLogForSelectedDay() async {
-    List<ExerciseLog> logs =
-    await _logStorageService.loadExerciseLogsByDate(_selectedDay);
+    List<ExerciseLog> logs = await _logStorageService.loadExerciseLogsByDate(_selectedDay);
     setState(() {
       _selectedDayExerciseLogs = logs;
     });
@@ -49,23 +70,28 @@ class CalendarScreenState extends State<CalendarScreen> {
     final prefs = await SharedPreferences.getInstance();
     String? data = prefs.getString('dietLogs');
     if (data != null) {
-      Map<String, dynamic> jsonData = jsonDecode(data);
-      setState(() {
-        _dietLogsByDate = jsonData.map((date, meals) {
-          return MapEntry(
-            date,
-            (meals as Map<String, dynamic>).map((meal, log) {
-              return MapEntry(
-                meal,
-                MealLog.fromJson(log),
-              );
-            }),
-          );
-        }).cast<String, Map<String, MealLog>>();
+      try {
+        Map<String, dynamic> jsonData = jsonDecode(data);
+        setState(() {
+          _dietLogsByDate = jsonData.map((date, meals) {
+            return MapEntry(
+              date,
+              List<MealLog>.from(
+                (meals as List<dynamic>).map((mealJson) => MealLog.fromJson(mealJson)),
+              ),
+            );
+          }).cast<String, List<MealLog>>();
 
-        String dateKey = _selectedDay.toIso8601String().split('T')[0];
-        _selectedDayDietLog = _dietLogsByDate[dateKey];
-      });
+          String dateKey = _getDateKey(_selectedDay);
+          _selectedDayDietLog = _dietLogsByDate[dateKey];
+        });
+      } catch (e) {
+        debugPrint('Error decoding diet logs: $e');
+        setState(() {
+          _dietLogsByDate = {};
+          _selectedDayDietLog = null;
+        });
+      }
     } else {
       setState(() {
         _dietLogsByDate = {};
@@ -83,8 +109,8 @@ class CalendarScreenState extends State<CalendarScreen> {
     _loadDietLogForSelectedDay();
   }
 
-  String getFormattedDate(DateTime date) {
-    return DateFormat('yyyy-MM-dd').format(date);
+  String _getDateKey(DateTime date) {
+    return date.toIso8601String().split('T')[0]; // 'YYYY-MM-DD' 형식
   }
 
   void _navigateToDietLogScreen() {
@@ -97,6 +123,7 @@ class CalendarScreenState extends State<CalendarScreen> {
         .then((_) {
       // 돌아왔을 때 데이터 새로고침
       _loadDietLogForSelectedDay();
+      _loadAllExerciseLogs(); // **추가: 식단 로그 변경 시 운동 로그도 새로고침**
     });
   }
 
@@ -104,7 +131,18 @@ class CalendarScreenState extends State<CalendarScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calendar'),
+        toolbarHeight: 100, // 기본 높이보다 크게 설정 (필요에 따라 조정)
+        centerTitle: true, // 제목을 중앙에 배치
+        title: const Padding(
+          padding: EdgeInsets.only(top: 20.0), // 제목을 아래로 내리기 위한 상단 패딩 (필요에 따라 조정)
+          child: Text(
+            'Calendar',
+            style: TextStyle(
+              fontSize: 36, // 텍스트 크기 조정 (필요에 따라 조정)
+              fontWeight: FontWeight.bold, // 텍스트 두께 조정
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -130,25 +168,43 @@ class CalendarScreenState extends State<CalendarScreen> {
             calendarBuilders: CalendarBuilders(
               markerBuilder: (context, date, events) {
                 String dateKey = _getDateKey(date);
+                List<Widget> indicators = [];
+
+                // **식단 로그 체크 표시 (빨간색)**
                 if (_dietLogsByDate.containsKey(dateKey)) {
                   final mealLogs = _dietLogsByDate[dateKey]!;
-                  List<Widget> indicators = [];
-                  mealLogs.forEach((meal, log) {
-                    if (log.isSkipped) {
-                      // Do not show marker for skipped meals
-                      // Alternatively, you can show a different marker if needed
-                    } else if (log.foods.isNotEmpty) {
-                      indicators.add(
-                        const Icon(Icons.check, color: Colors.green, size: 12),
-                      );
-                    }
-                  });
-                  if (indicators.isNotEmpty) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: indicators,
+                  bool hasDietLog = mealLogs.any((meal) => meal.foods.isNotEmpty);
+                  if (hasDietLog) {
+                    indicators.add(
+                      FaIcon(
+                        FontAwesomeIcons.solidCircleCheck, // 두꺼운 체크 아이콘
+                        color: Colors.green,
+                        size: 16, // 아이콘 크기 조정
+                      ),
                     );
                   }
+                }
+
+                // **운동 로그 체크 표시 (초록색)**
+                if (_exerciseLogsByDate.containsKey(dateKey)) {
+                  final exerciseLogs = _exerciseLogsByDate[dateKey]!;
+                  bool hasExerciseLog = exerciseLogs.isNotEmpty;
+                  if (hasExerciseLog) {
+                    indicators.add(
+                      FaIcon(
+                        FontAwesomeIcons.solidCircleCheck, // 두꺼운 체크 아이콘
+                        color: Colors.green,
+                        size: 16, // 아이콘 크기 조정
+                      ),
+                    );
+                  }
+                }
+
+                if (indicators.isNotEmpty) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: indicators,
+                  );
                 }
                 return null;
               },
@@ -227,8 +283,8 @@ class CalendarScreenState extends State<CalendarScreen> {
                         ),
                       ),
                       Expanded(
-                        child: _selectedDayDietLog != null
-                            ? _buildFilteredDietLogSections()
+                        child: _selectedDayDietLog != null && _selectedDayDietLog!.isNotEmpty
+                            ? _buildDietLogSections()
                             : Center(
                           child: ElevatedButton(
                             onPressed: _navigateToDietLogScreen,
@@ -247,114 +303,94 @@ class CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  String _getDateKey(DateTime date) {
-    return date.toIso8601String().split('T')[0]; // 'YYYY-MM-DD' 형식
-  }
+  /// DietLog 섹션 빌드
+  Widget _buildDietLogSections() {
+    final List<MealLog> meals = _selectedDayDietLog!;
 
-  /// Builds the diet log sections excluding skipped meals
-  Widget _buildFilteredDietLogSections() {
-    // List of meals to display
-    final List<String> meals = ['Breakfast', 'Lunch', 'Dinner'];
-
-    // Filter out the meals that are skipped
-    final List<String> displayedMeals = meals.where((meal) {
-      final mealLog = _selectedDayDietLog![meal];
-      return mealLog != null && !mealLog.isSkipped;
-    }).toList();
-
-    if (displayedMeals.isEmpty) {
-      // If all meals are skipped
-      return Center(
-        child: ElevatedButton(
-          onPressed: _navigateToDietLogScreen,
-          child: const Text('Add/Edit Diet'),
-        ),
-      );
-    }
-
-    return ListView(
-      children: displayedMeals.map((meal) => _buildMealSection(meal)).toList(),
-    );
-  }
-
-  Widget _buildMealSection(String meal) {
-    final mealLog = _selectedDayDietLog![meal]!;
-    final foods = mealLog.foods;
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-      child: Padding(
-        padding:
-        const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Meal name and edit button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return ListView.builder(
+      itemCount: meals.length,
+      itemBuilder: (context, index) {
+        final mealLog = meals[index];
+        return Card(
+          elevation: 2,
+          margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  meal,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
+                // Meal name and edit button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      index == 0
+                          ? 'Meal 1'
+                          : index == 1
+                          ? 'Meal 2'
+                          : index == 2
+                          ? 'Meal 3'
+                          : 'Meal ${index + 1}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.black),
+                      onPressed: _navigateToDietLogScreen,
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.black),
-                  onPressed: _navigateToDietLogScreen,
+                // Foods list
+                mealLog.foods.isNotEmpty
+                    ? Column(
+                  children: mealLog.foods.map((consumed) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Food name
+                          Text(
+                            consumed.name,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          // Nutrient information
+                          Text(
+                            'Amount: ${consumed.quantity.toStringAsFixed(1)}g\n'
+                                'Carbs: ${consumed.carbs.toStringAsFixed(1)}g\n'
+                                'Protein: ${consumed.protein.toStringAsFixed(1)}g\n'
+                                'Fat: ${consumed.fat.toStringAsFixed(1)}g',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                )
+                    : const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4.0),
+                  child: Text(
+                    'No foods added.',
+                    style: TextStyle(
+                        fontSize: 12, color: Colors.grey),
+                  ),
                 ),
               ],
             ),
-            // Foods list
-            foods.isNotEmpty
-                ? Column(
-              children: foods.map((consumed) {
-                return Padding(
-                  padding:
-                  const EdgeInsets.symmetric(vertical: 2.0),
-                  child: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                    children: [
-                      // Food name
-                      Text(
-                        consumed.name,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      // Nutrient information
-                      Text(
-                        'Amount: ${consumed.quantity.toStringAsFixed(1)}g\n'
-                            'Carbs: ${consumed.carbs.toStringAsFixed(1)}g\n'
-                            'Protein: ${consumed.protein.toStringAsFixed(1)}g\n'
-                            'Fat: ${consumed.fat.toStringAsFixed(1)}g',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            )
-                : const Padding(
-              padding: EdgeInsets.symmetric(vertical: 4.0),
-              child: Text(
-                'No foods added.',
-                style: TextStyle(
-                    fontSize: 12, color: Colors.grey),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

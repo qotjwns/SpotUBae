@@ -1,6 +1,6 @@
 // lib/models/meal_log.dart
 
-import 'consumed_food.dart';
+import '../../models/consumed_food.dart';
 
 /// 특정 끼니의 로그를 나타내는 클래스
 class MealLog {
