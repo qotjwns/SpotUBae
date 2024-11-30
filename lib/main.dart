@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:group_app/services/storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/user_data.dart';
+import 'services/program_user_data_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,11 +34,16 @@ Future<void> main() async {
   UserDataManageService userDataManageService = UserDataManageService();
   userDataManageService.loadUserData(loadedData);
 
+  // ProgramUserDataService 인스턴스 생성 및 데이터 로드
+  final programUserDataService = ProgramUserDataService();
+  await programUserDataService.loadProgramUserData();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: userDataManageService),
         ChangeNotifierProvider(create: (_) => GoalManageService()),
+        ChangeNotifierProvider.value(value: programUserDataService),
         Provider<StorageService>(create: (_) => storageService), // StorageService를 Provider로 등록
         Provider<ApiService>(
           create: (_) => ApiService(
@@ -55,6 +61,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return const MaterialApp(
       title: 'Fitness Chatbot',
       debugShowCheckedModeBanner: false,

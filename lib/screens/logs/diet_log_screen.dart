@@ -1,16 +1,21 @@
 // lib/screens/logs/diet_log_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:group_app/screens/main_screens/home_screen.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/message.dart';
+import '../../models/program_user_data.dart';
 import '../../services/api_service.dart';
 import '../../services/user_data_manage_service.dart';
 import '../../models/consumed_food.dart'; // ConsumedFood 임포트
 import '../../services/food_service.dart';
 import '../../widgets/widget_for_diet_log_screen/serving_size_dialog.dart';
 import 'package:provider/provider.dart';
+import '../program_screen/program_screen.dart';
 import 'meal_log.dart'; // MealLog 임포트
+import '../../services/program_user_data_service.dart';
+
 
 class DietLogScreen extends StatefulWidget {
   final DateTime selectedDay;
@@ -41,10 +46,23 @@ class DietLogScreenState extends State<DietLogScreen> {
   // **추가: 챗봇 응답 저장 변수**
   String _chatBotResponse = '';
 
+  // 프로그램 데이터를 저장할 변수
+  ProgramUserData? _currentProgramData;
+
   @override
   void initState() {
     super.initState();
     _loadDietLogs();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProgramData();
+    });
+  }
+
+
+  Future<void> _loadProgramData() async {
+    final programUserDataService = Provider.of<ProgramUserDataService>(context, listen: false);
+    _currentProgramData = programUserDataService.currentProgramData;
+    setState(() {}); // UI 업데이트
   }
 
   String _getDateKey(DateTime date) {
@@ -459,36 +477,151 @@ class DietLogScreenState extends State<DietLogScreen> {
             // 총 영양소 카드
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Card(
-                elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Total Nutrient Intake',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
+              child: Row(
+                children: [
+                  // Total Nutrient Intake 카드
+                  Expanded(
+                    child: Card(
+                      elevation: 4,
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Total Nutrient Intake',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Carbs: ${totalNutrients['carbs']!.toStringAsFixed(1)}g',
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                            Text(
+                              'Protein: ${totalNutrients['protein']!.toStringAsFixed(1)}g',
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                            Text(
+                              'Fat: ${totalNutrients['fat']!.toStringAsFixed(1)}g',
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Carbs: ${totalNutrients['carbs']!.toStringAsFixed(1)}g',
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                      Text(
-                        'Protein: ${totalNutrients['protein']!.toStringAsFixed(1)}g',
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                      Text(
-                        'Fat: ${totalNutrients['fat']!.toStringAsFixed(1)}g',
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 16), // 카드 간 간격
+                  // Program Targets 카드
+                  Expanded(
+                    child: Card(
+                      color: Colors.lightBlue[50],
+                      elevation: 4,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: _currentProgramData == null
+                            ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'No Program Set',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Please add a Bulking or Cutting program to see your daily intake targets.',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                SizedBox(
+                                  width: 80, // 버튼의 너비 조절
+                                  height: 40, // 버튼의 높이 조절
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      // Bulking 프로그램 화면으로 이동
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ProgramScreen(programType: 'Bulking'),
+                                        ),
+                                      );
+                                      _loadProgramData();
+                                    },
+                                    style: ElevatedButton.styleFrom(
+
+                                      textStyle: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    child: const Text('Bulk'),
+                                  ),
+                                ),
+                                // Cutting 버튼
+                                SizedBox(
+                                  width: 80, // 버튼의 너비 조절
+                                  height: 40, // 버튼의 높이 조절
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      // Cutting 프로그램 화면으로 이동
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ProgramScreen(programType: 'Cutting'),
+                                        ),
+                                      );
+                                      _loadProgramData();
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      textStyle: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    child: const Text('Cut'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                            : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${_currentProgramData!.programType} Program Targets',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Carbs: ${_currentProgramData!.dailyCarbs.toStringAsFixed(1)}g',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            Text(
+                              'Protein: ${_currentProgramData!.dailyProtein.toStringAsFixed(1)}g',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            Text(
+                              'Fat: ${_currentProgramData!.dailyFat.toStringAsFixed(1)}g',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             // 끼니 카드들

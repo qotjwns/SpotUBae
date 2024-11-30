@@ -16,6 +16,25 @@ class GoalCard extends StatelessWidget {
     super.key,
   });
 
+  void _showFullGoalDialog(BuildContext context) {
+    if (goal == null || goal!.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(goalType),
+        content: SingleChildScrollView(
+          child: Text(goal!),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -23,7 +42,14 @@ class GoalCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
       child: ListTile(
         title: Text(goalType, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(goal ?? "No goal set"),
+        subtitle: GestureDetector(
+          onTap: () => _showFullGoalDialog(context),
+          child: Text(
+            goal ?? "No goal set",
+            maxLines: 2, // 최대 2줄로 제한
+            overflow: TextOverflow.ellipsis, // 넘치는 부분은 ...으로 표시
+          ),
+        ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
