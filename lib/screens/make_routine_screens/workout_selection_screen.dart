@@ -1,10 +1,10 @@
 // workout_selection_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:group_app/screens/make_my_routine_screen.dart';
+import 'package:group_app/screens/make_routine_screens/make_my_routine_screen.dart';
 import 'package:provider/provider.dart';
-import '../services/storage_service.dart';
-import '../models/exercise.dart';
+import '../../services/storage_service.dart';
+import '../../models/exercise.dart';
 
 class WorkoutSelectionScreen extends StatefulWidget {
   const WorkoutSelectionScreen({super.key});

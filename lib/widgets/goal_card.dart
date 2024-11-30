@@ -13,8 +13,8 @@ class GoalCard extends StatelessWidget {
     required this.goal,
     required this.onEdit,
     required this.onReset, // 초기화 콜백 추가
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:group_app/screens/targeted_area_screen.dart';
+import 'package:group_app/screens/make_routine_screens/targeted_area_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/button_widget.dart';

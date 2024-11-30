@@ -7,16 +7,16 @@ class ServingSizeDialog extends StatefulWidget {
   final double initialServingSize;
 
   const ServingSizeDialog({
-    Key? key,
+    super.key,
     required this.foodName,
     required this.initialServingSize,
-  }) : super(key: key);
+  });
 
   @override
-  _ServingSizeDialogState createState() => _ServingSizeDialogState();
+  ServingSizeDialogState createState() => ServingSizeDialogState();
 }
 
-class _ServingSizeDialogState extends State<ServingSizeDialog> {
+class ServingSizeDialogState extends State<ServingSizeDialog> {
   late double servingSize;
 
   @override

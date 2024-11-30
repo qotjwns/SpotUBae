@@ -212,7 +212,7 @@ class UserDataFormState extends State<UserDataForm> {
               ),
               onPressed: _resetUserData,
               child: const Text(
-                'Graph initialization',
+                'Reset Graph',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,

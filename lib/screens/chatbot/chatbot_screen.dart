@@ -5,7 +5,7 @@ import 'package:group_app/widgets/button_widget.dart';
 import '../../models/message.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
-import '../workout_selection_screen.dart';
+import '../make_routine_screens/workout_selection_screen.dart';
 import 'package:provider/provider.dart';
 
 class ChatBotScreen extends StatefulWidget {
@@ -44,7 +44,6 @@ class ChatBotScreenState extends State<ChatBotScreen> {
       _apiService = ApiService(
           apiKey: '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'); // 실제 API 키로 대체하세요
       _loadMessages();
-      _loadExercises();
       _isInit = true;
     }
   }
@@ -56,27 +55,6 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     });
   }
 
-  Future<void> _loadExercises() async {
-    List<String> loadedExercises = await _storageService.loadExercisesFromDownload("recommendation");
-
-    if (loadedExercises.isNotEmpty) {
-      setState(() {
-        _messages.add(Message(
-          role: 'assistant',
-          content: "Loaded exercises: ${loadedExercises.join(", ")}",
-          timestamp: DateTime.now(),
-        ));
-      });
-    } else {
-      setState(() {
-        _messages.add(Message(
-          role: 'assistant',
-          content: "Recommendation exercise file does not exist.",
-          timestamp: DateTime.now(),
-        ));
-      });
-    }
-  }
 
   void _sendPredefinedMessage(String messageContent) {
     final userMessage = Message(
