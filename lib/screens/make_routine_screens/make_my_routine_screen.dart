@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:qr_flutter/qr_flutter.dart'; // QR 코드 생성 기능을 위해 추가
-import 'dart:ui' as ui;
-import 'dart:typed_data';
 import 'dart:async';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-
-import '../models/exercise.dart';
-import 'logs/exercise_log.dart';
-import '../services/routine_storage_service.dart';
-import '../services/exercise_log_storage_service.dart';
-import '../widgets/widget_for_make_routine/exercise_card.dart';
+import '../../models/exercise.dart';
+import '../logs/exercise_log.dart';
+import '../../services/routine_storage_service.dart';
+import '../../services/exercise_log_storage_service.dart';
+import '../../widgets/widget_for_make_routine/exercise_card.dart';
 
 class MakeMyRoutineScreen extends StatefulWidget {
   final List<Exercise>? initialExercises; // 초기 운동 리스트
@@ -292,16 +286,6 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   }
 
 
-
-
-  // QR 코드 이미지를 파일로 저장하는 함수
-  Future<String> _saveQrCodeToFile(Uint8List data) async {
-    final directory = await getTemporaryDirectory();
-    final filePath = '${directory.path}/routine_qr_code.png';
-    final file = await File(filePath).writeAsBytes(data);
-    return file.path;
-  }
-
   @override
   void dispose() {
     _audioPlayer.dispose();
@@ -311,7 +295,6 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      // 뒤로가기 버튼을 눌렀을 때 확인 다이얼로그 표시
       onWillPop: () async {
         return true;
       },

@@ -1,64 +1,72 @@
+// lib/screens/photo_diary_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../services/photo_service.dart';
+import '../models/photo.dart';
+import 'full_screen_photo_gallery.dart';
 import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-import 'dart:convert';
-import 'package:photo_view/photo_view.dart';
-import 'package:photo_view/photo_view_gallery.dart';
+import 'package:provider/provider.dart';
 
 class PhotoDiaryScreen extends StatefulWidget {
+  const PhotoDiaryScreen({super.key});
+
   @override
-  _PhotoDiaryScreenState createState() => _PhotoDiaryScreenState();
+  PhotoDiaryScreenState createState() => PhotoDiaryScreenState();
 }
 
-class _PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
-  final List<Map<String, dynamic>> _photos = [];
+class PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
   final ImagePicker _picker = ImagePicker();
+  late PhotoService _photoService;
+  final List<Photo> _photos = [];
 
   @override
   void initState() {
     super.initState();
-    _loadPhotos();
+    // PhotoService는 Provider를 통해 주입받을 예정이므로, 여기서는 초기화하지 않습니다.
+    // 추후 didChangeDependencies에서 주입받습니다.
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_photoService == null) {
+      _photoService = Provider.of<PhotoService>(context);
+      _loadPhotos();
+    }
   }
 
   Future<void> _loadPhotos() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedPhotos = prefs.getStringList('photos') ?? [];
+    final photos = await _photoService.loadPhotos();
     setState(() {
-      // JSON 문자열을 Map으로 변환하여 리스트에 추가
-      _photos.addAll(savedPhotos.map((photo) => jsonDecode(photo) as Map<String, dynamic>));
-      // 최신 날짜 순으로 정렬 (가장 최근 사진이 가장 앞에 오도록)
-      _photos.sort((a, b) => b['date'].compareTo(a['date']));
+      _photos.addAll(photos);
     });
   }
 
   Future<void> _savePhoto(String path) async {
-    final prefs = await SharedPreferences.getInstance();
-    final newPhoto = {
-      'path': path,
-      'date': DateTime.now().toIso8601String(),
-    };
-    // 새로운 사진을 리스트의 시작 부분에 추가
-    _photos.insert(0, newPhoto);
-
-    // SharedPreferences에 저장하기 위해 JSON 문자열로 변환
-    final photosJson = _photos.map((photo) => jsonEncode(photo)).toList();
-    await prefs.setStringList('photos', photosJson);
-    setState(() {});
+    final newPhoto = Photo(
+      path: path,
+      date: DateTime.now(),
+    );
+    await _photoService.addPhoto(newPhoto);
+    setState(() {
+      _photos.insert(0, newPhoto);
+    });
   }
 
   Future<void> _deletePhoto(int index) async {
-    final prefs = await SharedPreferences.getInstance();
+    await _photoService.deletePhoto(index);
     setState(() {
       _photos.removeAt(index);
     });
-    final photosJson = _photos.map((photo) => jsonEncode(photo)).toList();
-    await prefs.setStringList('photos', photosJson);
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 80, // 이미지 품질 조정 (옵션)
+    );
     if (pickedFile != null) {
       final shouldSave = await _showSaveDialog();
       if (shouldSave) {
@@ -71,16 +79,16 @@ class _PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
     return await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Save Photo'),
-        content: Text('Would you like to save this photo?'),
+        title: const Text('Save Photo'),
+        content: const Text('Would you like to save this photo?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('No'),
+            child: const Text('No'),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Yes'),
+            child: const Text('Yes'),
           ),
         ],
       ),
@@ -104,8 +112,8 @@ class _PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Photo Diary'),
-        leading: BackButton(),
+        title: const Text('Photo Diary'),
+        leading: const BackButton(),
       ),
       body: Column(
         children: [
@@ -114,22 +122,21 @@ class _PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
             child: GestureDetector(
               onTap: _pickImage,
               child: Center(
-                child:
-                Container(
+                child: Container(
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
                     borderRadius: BorderRadius.circular(10),
                   ),
                   width: 350,
-                  height:50,
-                  child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add_a_photo_outlined,color:Colors.black,size: 25,),
-                          Text("Add a Photo!")
-                        ],
-                      )
+                  height: 50,
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_a_photo_outlined, color: Colors.black, size: 25),
+                        Text("Add a Photo!")
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -137,8 +144,8 @@ class _PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
           ),
           Expanded(
             child: GridView.builder(
-              padding: EdgeInsets.all(8.0),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              padding: const EdgeInsets.all(8.0),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 mainAxisSpacing: 8.0,
                 crossAxisSpacing: 8.0,
@@ -153,16 +160,16 @@ class _PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
                     final shouldDelete = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: Text('Delete Photo'),
-                        content: Text('Are you sure you want to delete this photo?'),
+                        title: const Text('Delete Photo'),
+                        content: const Text('Are you sure you want to delete this photo?'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(false),
-                            child: Text('No'),
+                            child: const Text('No'),
                           ),
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(true),
-                            child: Text('Yes'),
+                            child: const Text('Yes'),
                           ),
                         ],
                       ),
@@ -175,15 +182,15 @@ class _PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
                     children: [
                       Expanded(
                         child: Image.file(
-                          File(photo['path']),
+                          File(photo.path),
                           fit: BoxFit.cover,
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(4.0),
                         child: Text(
-                          DateFormat('yyyy-MM-dd').format(DateTime.parse(photo['date'])),
-                          style: TextStyle(fontSize: 12),
+                          DateFormat('yyyy-MM-dd').format(photo.date),
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ),
                     ],
@@ -195,66 +202,5 @@ class _PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
         ],
       ),
     );
-  }
-}
-class FullScreenPhotoGallery extends StatefulWidget {
-  final List<Map<String, dynamic>> photos;
-  final int initialIndex;
-
-  FullScreenPhotoGallery({required this.photos, required this.initialIndex});
-
-  @override
-  _FullScreenPhotoGalleryState createState() => _FullScreenPhotoGalleryState();
-}
-
-class _FullScreenPhotoGalleryState extends State<FullScreenPhotoGallery> {
-  late PageController _pageController;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(initialPage: widget.initialIndex);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          PhotoViewGallery.builder(
-            scrollPhysics: const BouncingScrollPhysics(),
-            builder: (BuildContext context, int index) {
-              return PhotoViewGalleryPageOptions(
-                imageProvider: FileImage(File(widget.photos[index]['path'])),
-                initialScale: PhotoViewComputedScale.contained,
-                heroAttributes: PhotoViewHeroAttributes(tag: widget.photos[index]['path']),
-              );
-            },
-            itemCount: widget.photos.length,
-            loadingBuilder: (context, event) => Center(
-              child: CircularProgressIndicator(),
-            ),
-            pageController: _pageController,
-            onPageChanged: (index) {
-              // 여기에 페이지 변경 시 수행할 작업을 추가할 수 있습니다.
-            },
-          ),
-          Positioned(
-            top: 40,
-            left: 20,
-            child: IconButton(
-              icon: Icon(Icons.close, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
   }
 }
