@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import '../../widgets/button_widget.dart';
 import '../../services/goal_manage_service.dart';
 import '../../widgets/goal_card.dart';
+import '../program_screen/program_screen.dart';
+import '../../services/program_user_data_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -92,8 +94,10 @@ class HomeScreenState extends State<HomeScreen> {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Consumer<GoalManageService>(
-            builder: (context, goalManageService, child) {
+          child: Consumer2<GoalManageService, ProgramUserDataService>(
+            builder: (context, goalManageService, programUserDataService, child)  {
+              String? selectedProgramType = programUserDataService.currentProgramType;
+
               return Column(
                 children: [
                   const SizedBox(height: 20),
@@ -174,6 +178,54 @@ class HomeScreenState extends State<HomeScreen> {
                     goal: goalManageService.monthlyGoal?.value,
                     onEdit: () => _addOrEditGoal('Monthly Goal', goalManageService.monthlyGoal?.value),
                     onReset: () => goalManageService.resetGoal('monthly'), // 초기화 콜백
+                  ),
+                  const SizedBox(height: 20), // 간격 추가
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.black, // Bulking 선택 시 흰색, 아니면 검은색
+                          minimumSize: Size(MediaQuery.of(context).size.width * 0.4, 50), // 버튼 크기 설정
+                        ),
+                        onPressed: () async {
+                          // 프로그램 타입 설정
+                          await programUserDataService.setProgramType('Bulking');
+                          // ProgramScreen으로 이동
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => ProgramScreen(programType: 'Bulking'),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Bulking",
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:Colors.green,
+                          foregroundColor: Colors.black,
+                          minimumSize: Size(MediaQuery.of(context).size.width * 0.4, 50),
+                        ),
+                        onPressed: () async {
+                          // 프로그램 타입 설정
+                          await programUserDataService.setProgramType('Cutting');
+                          // ProgramScreen으로 이동
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => ProgramScreen(programType: 'Cutting'),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Cutting",
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               );
