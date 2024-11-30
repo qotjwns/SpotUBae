@@ -7,7 +7,6 @@ import '../models/photo.dart';
 import 'full_screen_photo_gallery.dart';
 import 'dart:io';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 class PhotoDiaryScreen extends StatefulWidget {
   const PhotoDiaryScreen({super.key});
