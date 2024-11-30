@@ -24,25 +24,13 @@ class PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
   @override
   void initState() {
     super.initState();
-    // PhotoService는 Provider를 통해 주입받을 예정이므로, 여기서는 초기화하지 않습니다.
-    // 추후 didChangeDependencies에서 주입받습니다.
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_photoService == null) {
-      _photoService = Provider.of<PhotoService>(context);
-      _loadPhotos();
-    }
   }
 
-  Future<void> _loadPhotos() async {
-    final photos = await _photoService.loadPhotos();
-    setState(() {
-      _photos.addAll(photos);
-    });
-  }
 
   Future<void> _savePhoto(String path) async {
     final newPhoto = Photo(
