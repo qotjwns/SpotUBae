@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../logs/meal_log.dart'; // MealLog 임포트
-import '../../models/consumed_food.dart'; // ConsumedFood 임포트
 import '../logs/exercise_log.dart';
 import '../../services/exercise_log_storage_service.dart';
 import '../logs/diet_log_screen.dart';
@@ -30,7 +29,6 @@ class CalendarScreenState extends State<CalendarScreen> {
   Map<String, List<MealLog>> _dietLogsByDate = {};
   List<MealLog>? _selectedDayDietLog;
 
-  // **추가: 운동 로그를 날짜별로 저장하는 Map**
   Map<String, List<ExerciseLog>> _exerciseLogsByDate = {};
 
   @override
@@ -38,10 +36,10 @@ class CalendarScreenState extends State<CalendarScreen> {
     super.initState();
     _loadExerciseLogForSelectedDay();
     _loadDietLogForSelectedDay();
-    _loadAllExerciseLogs(); // **추가: 모든 운동 로그 로드**
+    _loadAllExerciseLogs();
   }
 
-  // **추가: 모든 운동 로그를 불러와 날짜별로 매핑**
+  // 모든 운동 로그를 불러와 날짜별로 매핑
   Future<void> _loadAllExerciseLogs() async {
     List<ExerciseLog> allLogs = await _logStorageService.loadAllExerciseLogs();
     Map<String, List<ExerciseLog>> logsByDate = {};
@@ -110,7 +108,7 @@ class CalendarScreenState extends State<CalendarScreen> {
   }
 
   String _getDateKey(DateTime date) {
-    return date.toIso8601String().split('T')[0]; // 'YYYY-MM-DD' 형식
+    return DateFormat('yyyy-MM-dd').format(date); // 'YYYY-MM-DD' 형식
   }
 
   void _navigateToDietLogScreen() {
@@ -121,18 +119,28 @@ class CalendarScreenState extends State<CalendarScreen> {
       ),
     )
         .then((_) {
-      // 돌아왔을 때 데이터 새로고침
       _loadDietLogForSelectedDay();
-      _loadAllExerciseLogs(); // **추가: 식단 로그 변경 시 운동 로그도 새로고침**
+      _loadAllExerciseLogs();
     });
+  }
+
+  // 오늘로 돌아가기 버튼 동작
+  void _goToToday() {
+    final today = DateTime.now();
+    setState(() {
+      _selectedDay = today;
+      _focusedDay = today;
+    });
+    _loadExerciseLogForSelectedDay();
+    _loadDietLogForSelectedDay();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 100, // 기본 높이보다 크게 설정 (필요에 따라 조정)
-        centerTitle: true, // 제목을 중앙에 배치
+        toolbarHeight: 100,
+        centerTitle: true,
         title: const Padding(
           padding: EdgeInsets.only(top: 20.0), // 제목을 아래로 내리기 위한 상단 패딩 (필요에 따라 조정)
           child: Text(
@@ -143,12 +151,20 @@ class CalendarScreenState extends State<CalendarScreen> {
             ),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: _goToToday,
+          ),
+        ],
       ),
       body: Column(
         children: [
           TableCalendar(
             headerStyle: const HeaderStyle(
-                formatButtonVisible: false, titleCentered: true),
+              formatButtonVisible: false,
+              titleCentered: true,
+            ),
             firstDay: DateTime.utc(2020, 1, 1),
             lastDay: DateTime.utc(2030, 12, 31),
             focusedDay: _focusedDay,
@@ -165,27 +181,21 @@ class CalendarScreenState extends State<CalendarScreen> {
             onPageChanged: (focusedDay) {
               _focusedDay = focusedDay;
             },
+            calendarStyle: CalendarStyle(
+              selectedDecoration: BoxDecoration(
+                color: Colors.black,
+                shape: BoxShape.circle
+              ),
+              todayDecoration: BoxDecoration(
+                color: Colors.grey,
+                shape: BoxShape.circle
+              )
+            ),
+
             calendarBuilders: CalendarBuilders(
               markerBuilder: (context, date, events) {
                 String dateKey = _getDateKey(date);
                 List<Widget> indicators = [];
-
-                // **식단 로그 체크 표시 (빨간색)**
-                if (_dietLogsByDate.containsKey(dateKey)) {
-                  final mealLogs = _dietLogsByDate[dateKey]!;
-                  bool hasDietLog = mealLogs.any((meal) => meal.foods.isNotEmpty);
-                  if (hasDietLog) {
-                    indicators.add(
-                      FaIcon(
-                        FontAwesomeIcons.solidCircleCheck, // 두꺼운 체크 아이콘
-                        color: Colors.green,
-                        size: 16, // 아이콘 크기 조정
-                      ),
-                    );
-                  }
-                }
-
-                // **운동 로그 체크 표시 (초록색)**
                 if (_exerciseLogsByDate.containsKey(dateKey)) {
                   final exerciseLogs = _exerciseLogsByDate[dateKey]!;
                   bool hasExerciseLog = exerciseLogs.isNotEmpty;
@@ -193,7 +203,22 @@ class CalendarScreenState extends State<CalendarScreen> {
                     indicators.add(
                       FaIcon(
                         FontAwesomeIcons.solidCircleCheck, // 두꺼운 체크 아이콘
-                        color: Colors.green,
+                        color: Colors.black,
+                        size: 16, // 아이콘 크기 조정
+                      ),
+                    );
+                  }
+                }
+
+                // 식단 로그 체크 표시 (초록색 체크 아이콘)
+                if (_dietLogsByDate.containsKey(dateKey)) {
+                  final mealLogs = _dietLogsByDate[dateKey]!;
+                  bool hasDietLog = mealLogs.any((meal) => meal.foods.isNotEmpty);
+                  if (hasDietLog) {
+                    indicators.add(
+                      FaIcon(
+                        FontAwesomeIcons.solidCircleCheck, // 두꺼운 체크 아이콘
+                        color: Colors.red,
                         size: 16, // 아이콘 크기 조정
                       ),
                     );
@@ -214,6 +239,7 @@ class CalendarScreenState extends State<CalendarScreen> {
           Expanded(
             child: Row(
               children: [
+                // Workout Log 섹션
                 Expanded(
                   child: Column(
                     children: [
@@ -222,7 +248,9 @@ class CalendarScreenState extends State<CalendarScreen> {
                         child: Text(
                           'Workout Log',
                           style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       Expanded(
@@ -233,9 +261,9 @@ class CalendarScreenState extends State<CalendarScreen> {
                             final log = _selectedDayExerciseLogs[logIndex];
                             return ExpansionTile(
                               title: Text(
-                                'Log ${logIndex + 1} - ${DateFormat('HH:mm').format(log.timestamp)}',
+                                // 'Log1' 대신 저장된 시간을 표시
+                                DateFormat('HH:mm').format(log.timestamp),
                                 style: const TextStyle(
-                                  decoration: TextDecoration.underline,
                                   fontSize: 16,
                                 ),
                               ),
@@ -251,10 +279,9 @@ class CalendarScreenState extends State<CalendarScreen> {
                                   onTap: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            ExerciseLogDetailScreen(
-                                              exercise: exercise,
-                                            ),
+                                        builder: (context) => ExerciseLogDetailScreen(
+                                          exercise: exercise,
+                                        ),
                                       ),
                                     );
                                   },
@@ -271,6 +298,7 @@ class CalendarScreenState extends State<CalendarScreen> {
                   ),
                 ),
                 const VerticalDivider(width: 1, thickness: 1),
+                // Diet Log 섹션
                 Expanded(
                   child: Column(
                     children: [
@@ -279,7 +307,9 @@ class CalendarScreenState extends State<CalendarScreen> {
                         child: Text(
                           'Diet Log',
                           style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       Expanded(
@@ -288,6 +318,10 @@ class CalendarScreenState extends State<CalendarScreen> {
                             : Center(
                           child: ElevatedButton(
                             onPressed: _navigateToDietLogScreen,
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor: Colors.black,
+                            ),
                             child: const Text('Add/Edit Diet'),
                           ),
                         ),
@@ -382,8 +416,7 @@ class CalendarScreenState extends State<CalendarScreen> {
                   padding: EdgeInsets.symmetric(vertical: 4.0),
                   child: Text(
                     'No foods added.',
-                    style: TextStyle(
-                        fontSize: 12, color: Colors.grey),
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ),
               ],

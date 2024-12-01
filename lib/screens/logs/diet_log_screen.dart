@@ -1,7 +1,6 @@
 // lib/screens/logs/diet_log_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:group_app/screens/main_screens/home_screen.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/message.dart';
@@ -631,9 +630,8 @@ class DietLogScreenState extends State<DietLogScreen> {
 
               return Dismissible(
                 key: Key('meal_$index'),
-                direction: DismissDirection.startToEnd, // 왼쪽으로 스와이프
+                direction: DismissDirection.endToStart,
                 background: Container(
-                  color: Colors.red,
                   alignment: Alignment.centerLeft,
                   padding: const EdgeInsets.only(left: 20.0),
                   child: const Icon(Icons.delete, color: Colors.white),
@@ -729,6 +727,10 @@ class DietLogScreenState extends State<DietLogScreen> {
               child: ElevatedButton.icon(
                 onPressed: _addNewMeal,
                 icon: const Icon(Icons.add),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.black,
+                ),
                 label: const Text('Add Meal'),
               ),
             ),

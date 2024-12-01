@@ -52,13 +52,23 @@ class ServingSizeDialogState extends State<ServingSizeDialog> {
           onPressed: () {
             Navigator.of(context).pop(); // 취소
           },
-          child: const Text('Cancel'),
+          child: const Text(
+            'Cancel',
+            style: TextStyle(
+              color: Colors.black, // 제목 텍스트 색상 변경
+            ),
+          ),
         ),
         TextButton(
           onPressed: () {
             Navigator.of(context).pop(servingSize); // 수정된 servingSize 반환
           },
-          child: const Text('Update'),
+          child: const Text(
+            'Update',
+            style: TextStyle(
+              color: Colors.black, // 제목 텍스트 색상 변경
+            ),
+          ),
         ),
       ],
     );
