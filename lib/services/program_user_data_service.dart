@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/program_user_data.dart';
 
 class ProgramUserDataService with ChangeNotifier {
-  Map<String, ProgramUserData> _programDataMap = {};
+  final Map<String, ProgramUserData> _programDataMap = {};
   String? _currentProgramType;
 
   String? get currentProgramType => _currentProgramType;

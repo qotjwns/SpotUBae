@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../models/user_data.dart';
-import 'legend_item.dart'; // 별도로 분리한 LegendItem import
+
 
 class UserDataChart extends StatelessWidget {
   final List<UserData> userDataList;

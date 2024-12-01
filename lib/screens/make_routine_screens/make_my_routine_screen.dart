@@ -20,7 +20,8 @@ class MakeMyRoutineScreen extends StatefulWidget {
 class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   List<Exercise> _exercises = [];
   final RoutineStorageService _storageService = RoutineStorageService();
-  final ExerciseLogStorageService _logStorageService = ExerciseLogStorageService();
+  final ExerciseLogStorageService _logStorageService =
+      ExerciseLogStorageService();
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   Duration _timerDuration = const Duration(minutes: 1);
@@ -206,22 +207,31 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
         content: const Text('Do you want to save the changes?'),
         actions: [
           TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.black,
+            ),
             onPressed: () {
-              Navigator.of(context).pop('cancel'); // 취소
+              Navigator.of(context).pop('exit'); // 저장하지 않고 나가기
             },
-            child: const Text('Cancel'),
+            child: const Text('Exit without Saving'),
           ),
           TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.black,
+            ),
             onPressed: () {
               Navigator.of(context).pop('save'); // 저장 후 나가기
             },
             child: const Text('Save and Exit'),
           ),
           TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.black,
+            ),
             onPressed: () {
-              Navigator.of(context).pop('exit'); // 저장하지 않고 나가기
+              Navigator.of(context).pop('cancel'); // 취소
             },
-            child: const Text('Exit without Saving'),
+            child: const Text('Cancel'),
           ),
         ],
       ),
@@ -284,7 +294,6 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
       _addExercise(exerciseName.trim());
     }
   }
-
 
   @override
   void dispose() {
@@ -427,13 +436,13 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                             // 타이머 시작/취소 버튼
                             ElevatedButton(
                               onPressed:
-                              _isTimerRunning ? _cancelTimer : _startTimer,
+                                  _isTimerRunning ? _cancelTimer : _startTimer,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor:
-                                _isTimerRunning ? Colors.red : Colors.green,
+                                    _isTimerRunning ? Colors.red : Colors.green,
                                 minimumSize: const Size(50, 36),
                                 padding:
-                                const EdgeInsets.symmetric(horizontal: 8),
+                                    const EdgeInsets.symmetric(horizontal: 8),
                               ),
                               child: Text(_isTimerRunning ? "Stop" : "Start"),
                             ),
@@ -444,7 +453,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                               style: ElevatedButton.styleFrom(
                                 minimumSize: const Size(50, 36),
                                 padding:
-                                const EdgeInsets.symmetric(horizontal: 8),
+                                    const EdgeInsets.symmetric(horizontal: 8),
                               ),
                               child: const Text("Set"),
                             ),

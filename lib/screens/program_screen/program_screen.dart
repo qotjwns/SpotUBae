@@ -1,11 +1,21 @@
 // lib/screens/program_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-
 import '../../models/program_user_data.dart';
 import '../../services/program_user_data_service.dart';
+import '../../widgets/widgets_for_program_screen/age_input_field.dart';
+import '../../widgets/widgets_for_program_screen/buttons_row.dart';
+import '../../widgets/widgets_for_program_screen/current_body_fat_input_field.dart';
+import '../../widgets/widgets_for_program_screen/current_weight_input_field.dart';
+import '../../widgets/widgets_for_program_screen/expected_results_display.dart';
+import '../../widgets/widgets_for_program_screen/gender_selection.dart';
+import '../../widgets/widgets_for_program_screen/goal_body_fat_input_field.dart';
+import '../../widgets/widgets_for_program_screen/goal_weight_input_field.dart';
+import '../../widgets/widgets_for_program_screen/height_input_field.dart';
+import '../../widgets/widgets_for_program_screen/macro_results_display.dart';
+import '../../widgets/widgets_for_program_screen/reset_confirmation_dialog.dart';
+
 
 class ProgramScreen extends StatefulWidget {
   final String programType; // "Bulking" or "Cutting"
@@ -13,10 +23,10 @@ class ProgramScreen extends StatefulWidget {
   const ProgramScreen({super.key, required this.programType});
 
   @override
-  _ProgramScreenState createState() => _ProgramScreenState();
+  ProgramScreenState createState() => ProgramScreenState();
 }
 
-class _ProgramScreenState extends State<ProgramScreen> {
+class ProgramScreenState extends State<ProgramScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _currentWeightController = TextEditingController();
@@ -36,10 +46,20 @@ class _ProgramScreenState extends State<ProgramScreen> {
   double? expectedWeight1Month;
   double? expectedBodyFat1Month;
 
+  // 로딩 상태를 관리하기 위한 변수
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
+    _loadUserData();
+  }
+
+  // 사용자 데이터를 로드하는 메서드
+  Future<void> _loadUserData() async {
     final programUserDataService = Provider.of<ProgramUserDataService>(context, listen: false);
+    await programUserDataService.loadProgramUserData();
+
     if (programUserDataService.currentProgramType == widget.programType && programUserDataService.currentProgramData != null) {
       final data = programUserDataService.currentProgramData!;
       _ageController.text = data.age.toString();
@@ -55,6 +75,10 @@ class _ProgramScreenState extends State<ProgramScreen> {
         _calculateMacrosAndExpectations();
       });
     }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override
@@ -198,7 +222,6 @@ class _ProgramScreenState extends State<ProgramScreen> {
     });
   }
 
-
   void _saveUserData() async {
     if (_formKey.currentState!.validate()) {
       _calculateMacrosAndExpectations();
@@ -227,25 +250,11 @@ class _ProgramScreenState extends State<ProgramScreen> {
 
   /// Reset 기능 구현
   void _resetUserData() async {
-    // 확인 다이얼로그 표시
+    // ResetConfirmationDialog 표시
     bool? confirm = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Reset Information'),
-          content: const Text('Are you sure you want to reset all the information? This action cannot be undone.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true), // 'Confirm' 선택
-              child: const Text('Confirm'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false), // 'Cancel' 선택
-              child: const Text('Cancel'),
-            ),
-
-          ],
-        );
+        return const ResetConfirmationDialog();
       },
     );
 
@@ -287,23 +296,19 @@ class _ProgramScreenState extends State<ProgramScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Form(
           key: _formKey,
           autovalidateMode: AutovalidateMode.onUserInteraction, // Real-time validation
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center, // Center the entire Column
             children: [
               // Age input field
-              TextFormField(
+              AgeInputField(
                 controller: _ageController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'Age',
-                  suffixText: 'years',
-                ),
+                label: 'Age',
+                suffix: 'years',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your age.';
@@ -317,51 +322,22 @@ class _ProgramScreenState extends State<ProgramScreen> {
               ),
               const SizedBox(height: 10),
               // Gender selection field (Radio buttons)
-              Row(
-                children: [
-                  const Text('Gender: '),
-                  Expanded(
-                    child: ListTile(
-                      title: const Text('Male'),
-                      leading: Radio<String>(
-                        value: 'male',
-                        groupValue: _gender,
-                        onChanged: (value) {
-                          setState(() {
-                            _gender = value!;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListTile(
-                      title: const Text('Female'),
-                      leading: Radio<String>(
-                        value: 'female',
-                        groupValue: _gender,
-                        onChanged: (value) {
-                          setState(() {
-                            _gender = value!;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                ],
+              GenderSelection(
+                selectedGender: _gender,
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _gender = value;
+                    });
+                  }
+                },
               ),
               const SizedBox(height: 10),
               // Height input field
-              TextFormField(
+              HeightInputField(
                 controller: _heightController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'Height',
-                  suffixText: 'cm',
-                ),
+                label: 'Height',
+                suffix: 'cm',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your height.';
@@ -375,16 +351,10 @@ class _ProgramScreenState extends State<ProgramScreen> {
               ),
               const SizedBox(height: 10),
               // Current weight input field
-              TextFormField(
+              CurrentWeightInputField(
                 controller: _currentWeightController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'Current Weight',
-                  suffixText: 'kg',
-                ),
+                label: 'Current Weight',
+                suffix: 'kg',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your current weight.';
@@ -398,16 +368,10 @@ class _ProgramScreenState extends State<ProgramScreen> {
               ),
               const SizedBox(height: 10),
               // Current body fat percentage input field
-              TextFormField(
+              CurrentBodyFatInputField(
                 controller: _currentBodyFatController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'Current Body Fat Percentage',
-                  suffixText: '%',
-                ),
+                label: 'Current Body Fat Percentage',
+                suffix: '%',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your current body fat percentage.';
@@ -421,16 +385,10 @@ class _ProgramScreenState extends State<ProgramScreen> {
               ),
               const SizedBox(height: 10),
               // Goal weight input field
-              TextFormField(
+              GoalWeightInputField(
                 controller: _goalWeightController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'Goal Weight',
-                  suffixText: 'kg',
-                ),
+                label: 'Goal Weight',
+                suffix: 'kg',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your goal weight.';
@@ -444,16 +402,10 @@ class _ProgramScreenState extends State<ProgramScreen> {
               ),
               const SizedBox(height: 10),
               // Goal body fat percentage input field
-              TextFormField(
+              GoalBodyFatInputField(
                 controller: _goalBodyFatController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'Goal Body Fat Percentage',
-                  suffixText: '%',
-                ),
+                label: 'Goal Body Fat Percentage',
+                suffix: '%',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your goal body fat percentage.';
@@ -467,130 +419,30 @@ class _ProgramScreenState extends State<ProgramScreen> {
               ),
               const SizedBox(height: 20),
               // Save and Reset 버튼을 가로로 배치
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Save and Calculate 버튼
-                  ElevatedButton(
-                    onPressed: _saveUserData,
-                    child: const Text('Save and Calculate'),
-                  ),
-                  // Reset 버튼
-                  ElevatedButton(
-                    onPressed: _resetUserData,
-                    child: const Text('Reset'),
-                  ),
-                ],
+              ButtonsRow(
+                onSave: _saveUserData,
+                onReset: _resetUserData,
               ),
               const SizedBox(height: 30),
               // Display calculation results
               if (dailyCalories != null)
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.center, // Center the Column
+                  crossAxisAlignment: CrossAxisAlignment.center, // Center the entire Column
                   children: [
                     // Daily Calorie Intake Card
-                    Card(
-                      elevation: 3,
-                      margin: const EdgeInsets.symmetric(vertical: 10.0),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center, // Center elements within the card
-                          children: [
-                            Text(
-                              'Daily Calorie Intake',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontSize: 20.0, // 텍스트 크기 조정
-                                fontWeight: FontWeight.bold, // 텍스트 두께 조정
-                              ),
-                              textAlign: TextAlign.center, // Center the text
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Calories: ${dailyCalories!.toStringAsFixed(0)} kcal',
-                              style: const TextStyle(fontSize: 16.0),
-                              textAlign: TextAlign.center, // Center the text
-                            ),
-                            Text(
-                              'Carbs: ${carbs!.toStringAsFixed(1)} g',
-                              style: const TextStyle(fontSize: 16.0),
-                              textAlign: TextAlign.center, // Center the text
-                            ),
-                            Text(
-                              'Protein: ${protein!.toStringAsFixed(1)} g',
-                              style: const TextStyle(fontSize: 16.0),
-                              textAlign: TextAlign.center, // Center the text
-                            ),
-                            Text(
-                              'Fat: ${fat!.toStringAsFixed(1)} g',
-                              style: const TextStyle(fontSize: 16.0),
-                              textAlign: TextAlign.center, // Center the text
-                            ),
-                          ],
-                        ),
-                      ),
+                    MacroResultsDisplay(
+                      dailyCalories: dailyCalories!,
+                      carbs: carbs ?? 0.0,
+                      protein: protein ?? 0.0,
+                      fat: fat ?? 0.0,
                     ),
                     const SizedBox(height: 20),
-                    // Expected Results after 1 Week and 1 Month side by side
-                    Row(
-                      children: [
-                        // Expected after 1 Week
-                        Expanded(
-                          child: Card(
-                            elevation: 3,
-                            margin: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 10.0),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start, // Align text to the start
-                                children: [
-                                  Text(
-                                    'Expected after 1 Week',
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontSize: 18.0,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text('Weight: ${expectedWeight1Week!.toStringAsFixed(1)} kg'),
-                                  Text(
-                                    'Body Fat Percentage: ${expectedBodyFat1Week!.toStringAsFixed(1)} %',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Expected after 1 Month
-                        Expanded(
-                          child: Card(
-                            elevation: 3,
-                            margin: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 10.0),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start, // Align text to the start
-                                children: [
-                                  Text(
-                                    'Expected after 1 Month',
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontSize: 18.0,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text('Weight: ${expectedWeight1Month!.toStringAsFixed(1)} kg'),
-                                  Text(
-                                    'Body Fat Percentage: ${expectedBodyFat1Month!.toStringAsFixed(1)} %',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    // Expected Results after 1 Week and 1 Month
+                    ExpectedResultsDisplay(
+                      expectedWeight1Week: expectedWeight1Week,
+                      expectedBodyFat1Week: expectedBodyFat1Week,
+                      expectedWeight1Month: expectedWeight1Month,
+                      expectedBodyFat1Month: expectedBodyFat1Month,
                     ),
                   ],
                 ),

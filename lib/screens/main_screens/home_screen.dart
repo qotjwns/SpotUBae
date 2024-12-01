@@ -5,9 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:group_app/screens/make_routine_screens/targeted_area_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../widgets/button_widget.dart';
 import '../../services/goal_manage_service.dart';
-import '../../widgets/goal_card.dart';
+import '../../widgets/widget_for_make_routine/goal_card.dart';
 import '../program_screen/program_screen.dart';
 import '../../services/program_user_data_service.dart';
 
@@ -20,7 +19,8 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   void _addOrEditGoal(String goalType, [String? currentGoal]) {
-    TextEditingController goalController = TextEditingController(text: currentGoal);
+    TextEditingController goalController =
+        TextEditingController(text: currentGoal);
 
     showDialog(
       context: context,
@@ -95,9 +95,8 @@ class HomeScreenState extends State<HomeScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Consumer2<GoalManageService, ProgramUserDataService>(
-            builder: (context, goalManageService, programUserDataService, child)  {
-              String? selectedProgramType = programUserDataService.currentProgramType;
-
+            builder:
+                (context, goalManageService, programUserDataService, child) {
               return Column(
                 children: [
                   const SizedBox(height: 20),
@@ -127,13 +126,13 @@ class HomeScreenState extends State<HomeScreen> {
                     GoalCard(
                       goalType: "Today's Goal",
                       goal: goalManageService.dailyGoal!.value,
-                      onEdit: () => _addOrEditGoal("Today's Goal", goalManageService.dailyGoal!.value),
-                      onReset: () => goalManageService.resetGoal('daily'), // 초기화 콜백
+                      onEdit: () => _addOrEditGoal(
+                          "Today's Goal", goalManageService.dailyGoal!.value),
+                      onReset: () =>
+                          goalManageService.resetGoal('daily'), // 초기화 콜백
                     ),
                   const SizedBox(height: 30),
-                  ButtonWidget(
-                    label: "Start Workout",
-                    width: MediaQuery.of(context).size.width * 0.8,
+                  ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
@@ -141,6 +140,11 @@ class HomeScreenState extends State<HomeScreen> {
                         ),
                       );
                     },
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.black,
+                    ),
+                    child: Text("Start Workout"),
                   ),
                   const SizedBox(height: 50),
                   const Divider(),
@@ -156,12 +160,15 @@ class HomeScreenState extends State<HomeScreen> {
                       elevation: 3,
                       margin: const EdgeInsets.all(8.0),
                       child: ListTile(
-                        title: const Text("Today's Goal", style: TextStyle(fontWeight: FontWeight.bold),),
+                        title: const Text(
+                          "Today's Goal",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         subtitle: const Text("No goal yet"),
                         trailing: IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () => _addOrEditGoal("Today's Goal"),
-                            tooltip: 'Edit Today\'s Goal',
+                          icon: const Icon(Icons.edit),
+                          onPressed: () => _addOrEditGoal("Today's Goal"),
+                          tooltip: 'Edit Today\'s Goal',
                         ),
                       ),
                     ),
@@ -169,15 +176,19 @@ class HomeScreenState extends State<HomeScreen> {
                   GoalCard(
                     goalType: "Weekly Goal",
                     goal: goalManageService.weeklyGoal?.value,
-                    onEdit: () => _addOrEditGoal('Weekly Goal', goalManageService.weeklyGoal?.value),
-                    onReset: () => goalManageService.resetGoal('weekly'), // 초기화 콜백
+                    onEdit: () => _addOrEditGoal(
+                        'Weekly Goal', goalManageService.weeklyGoal?.value),
+                    onReset: () =>
+                        goalManageService.resetGoal('weekly'), // 초기화 콜백
                   ),
                   // Monthly Goal
                   GoalCard(
                     goalType: "Monthly Goal",
                     goal: goalManageService.monthlyGoal?.value,
-                    onEdit: () => _addOrEditGoal('Monthly Goal', goalManageService.monthlyGoal?.value),
-                    onReset: () => goalManageService.resetGoal('monthly'), // 초기화 콜백
+                    onEdit: () => _addOrEditGoal(
+                        'Monthly Goal', goalManageService.monthlyGoal?.value),
+                    onReset: () =>
+                        goalManageService.resetGoal('monthly'), // 초기화 콜백
                   ),
                   const SizedBox(height: 20), // 간격 추가
                   Row(
@@ -185,17 +196,22 @@ class HomeScreenState extends State<HomeScreen> {
                     children: [
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.black, // Bulking 선택 시 흰색, 아니면 검은색
-                          minimumSize: Size(MediaQuery.of(context).size.width * 0.4, 50), // 버튼 크기 설정
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          // Bulking 선택 시 흰색, 아니면 검은색
+                          minimumSize: Size(
+                              MediaQuery.of(context).size.width * 0.4,
+                              50), // 버튼 크기 설정
                         ),
                         onPressed: () async {
                           // 프로그램 타입 설정
-                          await programUserDataService.setProgramType('Bulking');
+                          await programUserDataService
+                              .setProgramType('Bulking');
                           // ProgramScreen으로 이동
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => ProgramScreen(programType: 'Bulking'),
+                              builder: (context) =>
+                                  ProgramScreen(programType: 'Bulking'),
                             ),
                           );
                         },
@@ -206,17 +222,18 @@ class HomeScreenState extends State<HomeScreen> {
                       ),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:Colors.green,
-                          foregroundColor: Colors.black,
-                          minimumSize: Size(MediaQuery.of(context).size.width * 0.4, 50),
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          minimumSize:
+                              Size(MediaQuery.of(context).size.width * 0.4, 50),
                         ),
                         onPressed: () async {
-                          // 프로그램 타입 설정
-                          await programUserDataService.setProgramType('Cutting');
-                          // ProgramScreen으로 이동
+                          await programUserDataService
+                              .setProgramType('Cutting');
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => ProgramScreen(programType: 'Cutting'),
+                              builder: (context) =>
+                                  ProgramScreen(programType: 'Cutting'),
                             ),
                           );
                         },

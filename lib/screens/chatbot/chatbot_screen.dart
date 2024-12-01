@@ -1,7 +1,6 @@
 // chat_bot_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:group_app/widgets/button_widget.dart';
 import '../../models/message.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
@@ -156,9 +155,13 @@ class ChatBotScreenState extends State<ChatBotScreen> {
         spacing: 8.0,
         runSpacing: 4.0,
         children: _predefinedMessages.map((message) {
-          return ButtonWidget(
+          return ElevatedButton(
             onPressed: () => _sendPredefinedMessage(message),
-            label: message,
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.black,
+            ),
+            child: Text(message),
           );
         }).toList(),
       ),

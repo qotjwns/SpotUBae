@@ -106,13 +106,17 @@ class ExerciseCardState extends State<ExerciseCard> {
               onPressed: () {
                 Navigator.of(context).pop(); // 취소
               },
-              child: const Text('Cancel'),
+              child: const Text('Cancel',style: TextStyle(
+                color: Colors.black, // 제목 텍스트 색상 변경
+              ),),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // 저장
               },
-              child: const Text('Save'),
+              child: const Text('Save',style: TextStyle(
+                color: Colors.black, // 제목 텍스트 색상 변경
+              ),),
             ),
           ],
         );
