@@ -1,3 +1,16 @@
+buildscript {
+    ext.kotlin_version = '1.8.10' // 최신 안정 버전으로 설정
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.2' // 프로젝트에 맞는 최신 버전
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // 다른 classpath들...
+    }
+}
+
 allprojects {
     repositories {
         google()
