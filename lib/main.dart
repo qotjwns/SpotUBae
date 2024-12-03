@@ -25,6 +25,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => GoalManageService()),
         ChangeNotifierProvider(create: (_) => UserDataService()),
+        ChangeNotifierProvider(create: (context) => UserDataService()..loadProfileUserData()),
         Provider<StorageService>(create: (_) => storageService), // StorageService를 Provider로 등록
         Provider<ApiService>(
           create: (_) => ApiService(
