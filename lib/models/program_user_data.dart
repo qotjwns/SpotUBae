@@ -3,17 +3,17 @@
 class ProgramUserData {
   final int age;
   final String gender;
-  final double currentWeight;
+  double currentWeight;
   final double height;
-  final double currentBodyFat;
+  double currentBodyFat;
   final double goalWeight;
   final double goalBodyFat;
-  final String programType;
+  String programType; // final 제거하여 mutable로 변경
 
   // 추가된 필드
-  final double dailyCarbs;
-  final double dailyProtein;
-  final double dailyFat;
+  double dailyCarbs;
+  double dailyProtein;
+  double dailyFat;
 
   ProgramUserData({
     required this.age,

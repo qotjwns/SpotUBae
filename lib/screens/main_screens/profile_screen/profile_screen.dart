@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:group_app/screens/main_screens/profile_screen/user_data_chart.dart';
 import 'package:group_app/screens/main_screens/profile_screen/user_data_form.dart';
 import 'package:provider/provider.dart';
-import '../../../services/user_data_manage_service.dart';
 import '../../photo_diary_screen.dart';
 import 'legend_item.dart';
+import '../../../services/user_data_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -26,8 +26,8 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: Consumer<UserDataManageService>(
-        builder: (context, userDataManageService, child) {
+      body: Consumer<UserDataService>(
+        builder: (context, userDataService, child) {
           return SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.symmetric(
@@ -44,14 +44,14 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 50),
                   const UserDataForm(),
                   const SizedBox(height: 20),
-                  userDataManageService.userDataList.isNotEmpty
+                  userDataService.profileUserDataList.isNotEmpty
                       ? Column(
                     children: [
                       SizedBox(
                         height: 300,
                         child: UserDataChart(
                           userDataList:
-                          userDataManageService.userDataList,
+                          userDataService.profileUserDataList,
                           maxY: 120,
                         ),
                       ),

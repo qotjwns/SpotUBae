@@ -6,14 +6,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/message.dart';
 import '../../models/program_user_data.dart';
 import '../../services/api_service.dart';
-import '../../services/user_data_manage_service.dart';
 import '../../models/consumed_food.dart'; // ConsumedFood 임포트
 import '../../services/food_service.dart';
 import '../../widgets/widget_for_diet_log_screen/serving_size_dialog.dart';
 import 'package:provider/provider.dart';
 import '../program_screen/program_screen.dart';
 import 'meal_log.dart'; // MealLog 임포트
-import '../../services/program_user_data_service.dart';
+import '../../services/user_data_service.dart';
 
 
 class DietLogScreen extends StatefulWidget {
@@ -47,6 +46,7 @@ class DietLogScreenState extends State<DietLogScreen> {
 
   // 프로그램 데이터를 저장할 변수
   ProgramUserData? _currentProgramData;
+  String? _currentProgramType; // 현재 프로그램 타입
 
   @override
   void initState() {
@@ -58,9 +58,23 @@ class DietLogScreenState extends State<DietLogScreen> {
   }
 
 
+  /// 프로그램 데이터 로드
   Future<void> _loadProgramData() async {
-    final programUserDataService = Provider.of<ProgramUserDataService>(context, listen: false);
-    _currentProgramData = programUserDataService.currentProgramData;
+    final userDataService = Provider.of<UserDataService>(context, listen: false);
+    await userDataService.loadProgramUserData(); // 프로그램 데이터 로드
+
+    // 현재 활성화된 프로그램 타입을 결정합니다.
+    // 'Bulking' 또는 'Cutting' 중 하나가 설정되어 있다고 가정합니다.
+    _currentProgramType = userDataService.currentProgramType;
+
+    if (_currentProgramType == 'Bulking') {
+      _currentProgramData = userDataService.bulkingProgramData;
+    } else if (_currentProgramType == 'Cutting') {
+      _currentProgramData = userDataService.cuttingProgramData;
+    } else {
+      _currentProgramData = null;
+    }
+
     setState(() {}); // UI 업데이트
   }
 
@@ -90,14 +104,14 @@ class DietLogScreenState extends State<DietLogScreen> {
     print('_requestChatBotFeedback called'); // 디버깅용 출력
 
     // **사용자의 최신 몸무게와 체지방률 가져오기**
-    final userDataManageService = Provider.of<UserDataManageService>(context, listen: false);
-    if (userDataManageService.userDataList.isEmpty) {
+    final userDataService = Provider.of<UserDataService>(context, listen: false);
+    if (userDataService.profileUserDataList.isEmpty) {
       _showSnackBar('Please enter your weight and body fat in the Profile screen.');
       print('User data list is empty'); // 디버깅용 출력
       return;
     }
 
-    final latestUserData = userDataManageService.userDataList.last;
+    final latestUserData = userDataService.profileUserDataList.last;
     final weight = latestUserData.weight;
     final bodyFat = latestUserData.bodyFat;
     print('Latest User Data - Weight: $weight kg, Body Fat: $bodyFat%'); // 디버깅용 출력

@@ -3,7 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/program_user_data.dart';
-import '../../services/program_user_data_service.dart';
+import '../../models/user_data.dart';
+import '../../services/user_data_service.dart';
 import '../../widgets/widgets_for_program_screen/age_input_field.dart';
 import '../../widgets/widgets_for_program_screen/buttons_row.dart';
 import '../../widgets/widgets_for_program_screen/current_body_fat_input_field.dart';
@@ -15,7 +16,6 @@ import '../../widgets/widgets_for_program_screen/goal_weight_input_field.dart';
 import '../../widgets/widgets_for_program_screen/height_input_field.dart';
 import '../../widgets/widgets_for_program_screen/macro_results_display.dart';
 import '../../widgets/widgets_for_program_screen/reset_confirmation_dialog.dart';
-
 
 class ProgramScreen extends StatefulWidget {
   final String programType; // "Bulking" or "Cutting"
@@ -57,11 +57,11 @@ class ProgramScreenState extends State<ProgramScreen> {
 
   // 사용자 데이터를 로드하는 메서드
   Future<void> _loadUserData() async {
-    final programUserDataService = Provider.of<ProgramUserDataService>(context, listen: false);
-    await programUserDataService.loadProgramUserData();
+    final userDataService = Provider.of<UserDataService>(context, listen: false);
+    await userDataService.loadProgramUserData();
 
-    if (programUserDataService.currentProgramType == widget.programType && programUserDataService.currentProgramData != null) {
-      final data = programUserDataService.currentProgramData!;
+    if (widget.programType == 'Bulking' && userDataService.bulkingProgramData != null) {
+      final data = userDataService.bulkingProgramData!;
       _ageController.text = data.age.toString();
       _gender = data.gender;
       _currentWeightController.text = data.currentWeight.toString();
@@ -70,7 +70,21 @@ class ProgramScreenState extends State<ProgramScreen> {
       _goalWeightController.text = data.goalWeight.toString();
       _goalBodyFatController.text = data.goalBodyFat.toString();
 
-      // Calculate results based on existing data
+      // 계산 결과 표시
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _calculateMacrosAndExpectations();
+      });
+    } else if (widget.programType == 'Cutting' && userDataService.cuttingProgramData != null) {
+      final data = userDataService.cuttingProgramData!;
+      _ageController.text = data.age.toString();
+      _gender = data.gender;
+      _currentWeightController.text = data.currentWeight.toString();
+      _heightController.text = data.height.toString();
+      _currentBodyFatController.text = data.currentBodyFat.toString();
+      _goalWeightController.text = data.goalWeight.toString();
+      _goalBodyFatController.text = data.goalBodyFat.toString();
+
+      // 계산 결과 표시
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _calculateMacrosAndExpectations();
       });
@@ -101,7 +115,7 @@ class ProgramScreenState extends State<ProgramScreen> {
     int age = int.tryParse(_ageController.text) ?? 25;
     String gender = _gender;
 
-    // Calculate BMR using the Mifflin-St Jeor Equation
+    // Mifflin-St Jeor 방정식을 사용한 BMR 계산
     double bmr;
     if (gender == 'male') {
       bmr = 10 * currentWeight + 6.25 * height - 5 * age + 5;
@@ -109,10 +123,10 @@ class ProgramScreenState extends State<ProgramScreen> {
       bmr = 10 * currentWeight + 6.25 * height - 5 * age - 161;
     }
 
-    // Calculate TDEE assuming moderately active
+    // 중간 활동 수준을 가정한 TDEE 계산
     double tdee = bmr * 1.55;
 
-    // Adjust calories based on program type
+    // 프로그램 타입에 따른 칼로리 조정
     double calorieAdjustment;
     if (widget.programType == 'Bulking') {
       calorieAdjustment = tdee + 500;
@@ -120,59 +134,59 @@ class ProgramScreenState extends State<ProgramScreen> {
       calorieAdjustment = tdee - 500;
     }
 
-    // Calculate macros
-    protein = currentWeight * 2.0; // Protein 2g/kg
-    fat = currentWeight * 0.8; // Fat 0.8g/kg
+    // 매크로 계산
+    protein = currentWeight * 2.0; // 단백질 2g/kg
+    fat = currentWeight * 0.8; // 지방 0.8g/kg
     carbs = (calorieAdjustment - (protein! * 4 + fat! * 9)) / 4;
 
-    // Calculate total change required
+    // 총 체중 변화량 계산
     double totalWeightChange = goalWeight - currentWeight;
     double totalBodyFatChange = goalBodyFat - currentBodyFat;
 
-    // Set maximum weekly change
+    // 주간 최대 변화량 설정
     const double maxWeeklyWeightChange = 0.5; // kg
     const double maxWeeklyBodyFatChange = 0.3; // %
 
-    // Adjust weekly changes based on program type
+    // 프로그램 타입에 따른 주간 변화량 조정
     double weeklyWeightChange;
     double weeklyBodyFatChange;
 
     if (widget.programType == 'Bulking') {
-      // Bulking: Increase weight
+      // Bulking: 체중 증가
       weeklyWeightChange = (totalWeightChange > 0 ? (totalWeightChange).clamp(0.0, maxWeeklyWeightChange) : 0.0);
 
-      // Bulking: Allow body fat to increase or decrease
+      // Bulking: 체지방 증감 허용
       if (totalBodyFatChange > 0) {
-        // Goal body fat is higher: allow increase
+        // 체지방 증가
         weeklyBodyFatChange = (totalBodyFatChange).clamp(0.0, maxWeeklyBodyFatChange);
       } else if (totalBodyFatChange < 0) {
-        // Goal body fat is lower: allow decrease
+        // 체지방 감소
         weeklyBodyFatChange = (totalBodyFatChange).clamp(-maxWeeklyBodyFatChange, 0.0);
       } else {
         weeklyBodyFatChange = 0.0;
       }
     } else {
-      // Cutting: Decrease weight
+      // Cutting: 체중 감소
       weeklyWeightChange = (totalWeightChange < 0 ? (totalWeightChange).clamp(-maxWeeklyWeightChange, 0.0) : 0.0);
 
-      // Cutting: Allow only body fat to decrease
+      // Cutting: 체지방 감소만 허용
       weeklyBodyFatChange = (totalBodyFatChange < 0 ? (totalBodyFatChange).clamp(-maxWeeklyBodyFatChange, 0.0) : 0.0);
     }
 
-    // Calculate expected values after 1 week
+    // 1주 후 예상 값 계산
     expectedWeight1Week = currentWeight + weeklyWeightChange;
     expectedBodyFat1Week = currentBodyFat + weeklyBodyFatChange;
 
-    // Calculate expected values after 1 month (4 weeks)
+    // 1개월 후 예상 값 계산 (4주 기준)
     double monthlyWeightChange = weeklyWeightChange * 4;
     double monthlyBodyFatChange = weeklyBodyFatChange * 4;
 
     expectedWeight1Month = currentWeight + monthlyWeightChange;
     expectedBodyFat1Month = currentBodyFat + monthlyBodyFatChange;
 
-    // Prevent exceeding goals
+    // 목표 초과 방지
     if (widget.programType == 'Bulking') {
-      // Bulking: Do not exceed target weight
+      // Bulking: 목표 체중 초과 방지
       if (expectedWeight1Week! > goalWeight) {
         expectedWeight1Week = goalWeight;
       }
@@ -180,9 +194,9 @@ class ProgramScreenState extends State<ProgramScreen> {
         expectedWeight1Month = goalWeight;
       }
 
-      // Bulking: Handle body fat based on goal
+      // Bulking: 목표 체지방에 따른 조정
       if (goalBodyFat > currentBodyFat) {
-        // Allow up to goal body fat
+        // 체지방 증가 허용
         if (expectedBodyFat1Week! > goalBodyFat) {
           expectedBodyFat1Week = goalBodyFat;
         }
@@ -190,7 +204,7 @@ class ProgramScreenState extends State<ProgramScreen> {
           expectedBodyFat1Month = goalBodyFat;
         }
       } else {
-        // Allow down to goal body fat
+        // 체지방 감소 허용
         if (expectedBodyFat1Week! < goalBodyFat) {
           expectedBodyFat1Week = goalBodyFat;
         }
@@ -199,7 +213,7 @@ class ProgramScreenState extends State<ProgramScreen> {
         }
       }
     } else {
-      // Cutting: Do not go below target weight
+      // Cutting: 목표 체중 이하 방지
       if (expectedWeight1Week! < goalWeight) {
         expectedWeight1Week = goalWeight;
       }
@@ -207,7 +221,7 @@ class ProgramScreenState extends State<ProgramScreen> {
         expectedWeight1Month = goalWeight;
       }
 
-      // Cutting: Do not go below target body fat
+      // Cutting: 목표 체지방 이하 방지
       if (expectedBodyFat1Week! < goalBodyFat) {
         expectedBodyFat1Week = goalBodyFat;
       }
@@ -226,24 +240,65 @@ class ProgramScreenState extends State<ProgramScreen> {
     if (_formKey.currentState!.validate()) {
       _calculateMacrosAndExpectations();
 
-      ProgramUserData data = ProgramUserData(
-        age: int.parse(_ageController.text),
-        gender: _gender,
-        currentWeight: double.parse(_currentWeightController.text),
-        height: double.parse(_heightController.text),
-        currentBodyFat: double.parse(_currentBodyFatController.text),
-        goalWeight: double.parse(_goalWeightController.text),
-        goalBodyFat: double.parse(_goalBodyFatController.text),
-        programType: widget.programType,
-        dailyCarbs: carbs ?? 0.0,
-        dailyProtein: protein ?? 0.0,
-        dailyFat: fat ?? 0.0,
-      );
+      // UserDataService 사용
+      final userDataService = Provider.of<UserDataService>(context, listen: false);
 
-      await Provider.of<ProgramUserDataService>(context, listen: false).saveProgramUserData(data);
+      // 현재 프로그램 타입을 UserDataService에 설정
+      await userDataService.setCurrentProgramType(widget.programType);
+
+      // 프로그램 데이터가 이미 존재하면 특정 필드만 업데이트
+      if (widget.programType == 'Bulking' && userDataService.bulkingProgramData != null) {
+        await userDataService.updateProgramUserData(
+          programType: 'Bulking',
+          currentWeight: double.parse(_currentWeightController.text),
+          currentBodyFat: double.parse(_currentBodyFatController.text),
+        );
+      } else if (widget.programType == 'Cutting' && userDataService.cuttingProgramData != null) {
+        await userDataService.updateProgramUserData(
+          programType: 'Cutting',
+          currentWeight: double.parse(_currentWeightController.text),
+          currentBodyFat: double.parse(_currentBodyFatController.text),
+        );
+      } else {
+        // 프로그램 데이터가 없으면 전체 저장
+        ProgramUserData data = ProgramUserData(
+          age: int.parse(_ageController.text),
+          gender: _gender,
+          currentWeight: double.parse(_currentWeightController.text),
+          height: double.parse(_heightController.text),
+          currentBodyFat: double.parse(_currentBodyFatController.text),
+          goalWeight: double.parse(_goalWeightController.text),
+          goalBodyFat: double.parse(_goalBodyFatController.text),
+          programType: widget.programType,
+          dailyCarbs: carbs ?? 0.0,
+          dailyProtein: protein ?? 0.0,
+          dailyFat: fat ?? 0.0,
+        );
+        if (widget.programType == 'Bulking') {
+          await userDataService.saveBulkingProgramData(data);
+        } else if (widget.programType == 'Cutting') {
+          await userDataService.saveCuttingProgramData(data);
+        }
+      }
+
+      // 프로필 데이터도 동기화
+      if (userDataService.profileUserDataList.isNotEmpty) {
+        UserData latestData = userDataService.profileUserDataList.last;
+        latestData.weight = double.parse(_currentWeightController.text);
+        latestData.bodyFat = double.parse(_currentBodyFatController.text);
+        await userDataService.addOrUpdateProfileUserData(latestData);
+      } else {
+        // 프로필 데이터가 없으면 새로 추가
+        UserData newUserData = UserData(
+          date: DateTime.now(),
+          weight: double.parse(_currentWeightController.text),
+          bodyFat: double.parse(_currentBodyFatController.text),
+        );
+        await userDataService.addOrUpdateProfileUserData(newUserData);
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Program saved successfully')),
+        const SnackBar(content: Text('Your data successfully saved.')),
       );
     }
   }
@@ -279,11 +334,13 @@ class ProgramScreenState extends State<ProgramScreen> {
         expectedBodyFat1Month = null;
       });
 
-      // ProgramUserDataService에서 데이터 삭제
-      await Provider.of<ProgramUserDataService>(context, listen: false).clearProgramUserData();
+      // UserDataService에서 프로그램 데이터 삭제
+      final userDataService = Provider.of<UserDataService>(context, listen: false);
+      await userDataService.resetProgramUserData(); // 변경된 부분
+
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Information has been reset.')),
+        const SnackBar(content: Text('Your data has been reset.')),
       );
     }
   }
@@ -300,9 +357,9 @@ class ProgramScreenState extends State<ProgramScreen> {
             ? const Center(child: CircularProgressIndicator())
             : Form(
           key: _formKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction, // Real-time validation
+          autovalidateMode: AutovalidateMode.onUserInteraction, // 실시간 검증
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center, // Center the entire Column
+            crossAxisAlignment: CrossAxisAlignment.center, // Column 전체를 가운데 정렬
             children: [
               // Age input field
               AgeInputField(

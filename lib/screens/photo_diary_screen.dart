@@ -7,6 +7,8 @@ import '../models/photo.dart';
 import 'full_screen_photo_gallery.dart';
 import 'dart:io';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 class PhotoDiaryScreen extends StatefulWidget {
   const PhotoDiaryScreen({super.key});
@@ -23,11 +25,20 @@ class PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
   @override
   void initState() {
     super.initState();
+    _photoService = PhotoService(); // PhotoService 초기화
+    _loadPhotos(); // 저장된 사진 로드
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+  }
+
+  Future<void> _loadPhotos() async {
+    final photos = await _photoService.loadPhotos();
+    setState(() {
+      _photos.addAll(photos);
+    });
   }
 
 
@@ -43,10 +54,25 @@ class PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
   }
 
   Future<void> _deletePhoto(int index) async {
+    final photo = _photos[index];
+    final file = File(photo.path);
+    if (await file.exists()) {
+      await file.delete();
+    }
     await _photoService.deletePhoto(index);
     setState(() {
       _photos.removeAt(index);
     });
+  }
+
+
+  Future<String> _saveImageToLocalDirectory(String imagePath) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final fileName = path.basename(imagePath);
+    final savedImagePath = path.join(directory.path, fileName);
+    final imageFile = File(imagePath);
+    final savedImage = await imageFile.copy(savedImagePath);
+    return savedImage.path;
   }
 
   Future<void> _pickImage() async {
@@ -57,7 +83,8 @@ class PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
     if (pickedFile != null) {
       final shouldSave = await _showSaveDialog();
       if (shouldSave) {
-        await _savePhoto(pickedFile.path);
+        final savedPath = await _saveImageToLocalDirectory(pickedFile.path);
+        await _savePhoto(savedPath);
       }
     }
   }

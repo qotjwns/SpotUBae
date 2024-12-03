@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/exercise.dart';
 import '../../services/api_service.dart';
-import '../../services/user_data_manage_service.dart';
 import '../../models/message.dart';
+import '../../services/user_data_service.dart';
 
 class ExerciseLogDetailScreen extends StatefulWidget {
   final Exercise exercise;
@@ -37,9 +37,11 @@ class ExerciseLogDetailScreenState extends State<ExerciseLogDetailScreen> {
       _isLoading = true;
     });
 
-    final userDataManageService =
-    Provider.of<UserDataManageService>(context, listen: false);
-    if (userDataManageService.userDataList.isEmpty) {
+
+    final userDataService = Provider.of<UserDataService>(context, listen: false);
+
+    // 프로필 데이터 리스트에서 최신 데이터 가져오기
+    if (userDataService.profileUserDataList.isEmpty) {
       _showSnackBar('프로필 화면에서 몸무게와 체지방률을 입력해 주세요.');
       setState(() {
         _isLoading = false;
@@ -47,7 +49,7 @@ class ExerciseLogDetailScreenState extends State<ExerciseLogDetailScreen> {
       return;
     }
 
-    final latestUserData = userDataManageService.userDataList.last;
+    final latestUserData = userDataService.profileUserDataList.last;
     final weight = latestUserData.weight;
     final bodyFat = latestUserData.bodyFat;
 

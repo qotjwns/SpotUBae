@@ -5,10 +5,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:group_app/screens/make_routine_screens/targeted_area_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../services/goal_manage_service.dart';
-import '../../widgets/widget_for_make_routine/goal_card.dart';
+import '../../models/program_user_data.dart';
 import '../program_screen/program_screen.dart';
-import '../../services/program_user_data_service.dart';
+import '../../services/user_data_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,19 +32,6 @@ class HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              String typeKey;
-              if (goalType == "Today's Goal") {
-                typeKey = 'daily';
-              } else if (goalType == 'Weekly Goal') {
-                typeKey = 'weekly';
-              } else if (goalType == 'Monthly Goal') {
-                typeKey = 'monthly';
-              } else {
-                typeKey = 'daily';
-              }
-
-              Provider.of<GoalManageService>(context, listen: false)
-                  .setGoal(typeKey, goalController.text);
               Navigator.of(context).pop();
             },
             child: const Text('Save'),
@@ -94,9 +80,16 @@ class HomeScreenState extends State<HomeScreen> {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Consumer2<GoalManageService, ProgramUserDataService>(
+          child: Consumer< UserDataService>(
             builder:
-                (context, goalManageService, programUserDataService, child) {
+                (context, userDataService, child) {
+                  String? currentProgramType = userDataService.currentProgramType;
+                  ProgramUserData? currentProgramData;
+                  if (currentProgramType == 'Bulking') {
+                    currentProgramData = userDataService.bulkingProgramData;
+                  } else if (currentProgramType == 'Cutting') {
+                    currentProgramData = userDataService.cuttingProgramData;
+                  }
               return Column(
                 children: [
                   const SizedBox(height: 20),
@@ -121,17 +114,6 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // 'Today's Goal'만 입력된 경우에만 버튼 위에 표시
-                  if (goalManageService.dailyGoal != null)
-                    GoalCard(
-                      goalType: "Today's Goal",
-                      goal: goalManageService.dailyGoal!.value,
-                      onEdit: () => _addOrEditGoal(
-                          "Today's Goal", goalManageService.dailyGoal!.value),
-                      onReset: () =>
-                          goalManageService.resetGoal('daily'), // 초기화 콜백
-                    ),
-                  const SizedBox(height: 30),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).push(
@@ -143,10 +125,12 @@ class HomeScreenState extends State<HomeScreen> {
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.white,
                       backgroundColor: Colors.black,
+                      minimumSize: Size(200, 70),
+                      textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold), // 텍스트 스타일
                     ),
                     child: Text("Start Workout"),
                   ),
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 30),
                   const Divider(),
                   const SizedBox(height: 30),
                   const Text(
@@ -154,41 +138,65 @@ class HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 30),
-                  // 일일 목표가 설정되지 않은 경우에만 표시
-                  if (goalManageService.dailyGoal == null)
-                    Card(
-                      elevation: 3,
-                      margin: const EdgeInsets.all(8.0),
-                      child: ListTile(
-                        title: const Text(
-                          "Today's Goal",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: const Text("No goal yet"),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () => _addOrEditGoal("Today's Goal"),
-                          tooltip: 'Edit Today\'s Goal',
-                        ),
+                  // "Your Goal" 카드 추가
+                  Card(
+                    elevation: 3,
+                    margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: currentProgramData != null
+                          ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Your Goal (${currentProgramType!})',
+                            style: const TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+                          Text(
+                            'Goal Weight: ${currentProgramData.goalWeight} kg',
+                            style: const TextStyle(fontSize: 25,
+                              fontWeight: FontWeight.bold,),
+                          ),
+                          Text(
+                            'Goal Body Fat: ${currentProgramData.goalBodyFat}%',
+                            style: const TextStyle(fontSize: 25,
+                              fontWeight: FontWeight.bold,),
+                          ),
+                        ],
+                      )
+                          : Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Start Bulking/Cutting program\n           '
+                                'to reach your Goal!',
+                            style: const TextStyle(
+                              fontSize: 27,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Push yourself to the limit!',
+                            style: const TextStyle(fontSize: 20,
+                            fontWeight: FontWeight.bold,),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'GO TO THE F\'CKING GYM',
+                            style: const TextStyle(fontSize: 10,
+                              fontWeight: FontWeight.bold,),
+                          )
+                        ],
                       ),
                     ),
-                  // Weekly Goal
-                  GoalCard(
-                    goalType: "Weekly Goal",
-                    goal: goalManageService.weeklyGoal?.value,
-                    onEdit: () => _addOrEditGoal(
-                        'Weekly Goal', goalManageService.weeklyGoal?.value),
-                    onReset: () =>
-                        goalManageService.resetGoal('weekly'), // 초기화 콜백
-                  ),
-                  // Monthly Goal
-                  GoalCard(
-                    goalType: "Monthly Goal",
-                    goal: goalManageService.monthlyGoal?.value,
-                    onEdit: () => _addOrEditGoal(
-                        'Monthly Goal', goalManageService.monthlyGoal?.value),
-                    onReset: () =>
-                        goalManageService.resetGoal('monthly'), // 초기화 콜백
                   ),
                   const SizedBox(height: 20), // 간격 추가
                   Row(
@@ -205,9 +213,9 @@ class HomeScreenState extends State<HomeScreen> {
                         ),
                         onPressed: () async {
                           // 프로그램 타입 설정
-                          await programUserDataService
-                              .setProgramType('Bulking');
+                          await userDataService.setCurrentProgramType('Bulking');
                           // ProgramScreen으로 이동
+
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) =>
@@ -228,8 +236,7 @@ class HomeScreenState extends State<HomeScreen> {
                               Size(MediaQuery.of(context).size.width * 0.4, 50),
                         ),
                         onPressed: () async {
-                          await programUserDataService
-                              .setProgramType('Cutting');
+                          await userDataService.setCurrentProgramType('Cutting');
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) =>
