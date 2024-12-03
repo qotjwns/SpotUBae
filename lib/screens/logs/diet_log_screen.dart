@@ -6,14 +6,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/message.dart';
 import '../../models/program_user_data.dart';
 import '../../services/api_service.dart';
-import '../../models/consumed_food.dart'; // ConsumedFood 임포트
+import '../../models/consumed_food.dart'; // ConsumedFood import
 import '../../services/food_service.dart';
 import '../../widgets/widget_for_diet_log_screen/serving_size_dialog.dart';
 import 'package:provider/provider.dart';
 import '../program_screen/program_screen.dart';
-import 'meal_log.dart'; // MealLog 임포트
+import 'meal_log.dart'; // MealLog import
 import '../../services/user_data_service.dart';
-
 
 class DietLogScreen extends StatefulWidget {
   final DateTime selectedDay;
@@ -25,7 +24,7 @@ class DietLogScreen extends StatefulWidget {
 }
 
 class DietLogScreenState extends State<DietLogScreen> {
-  // Map<String, List<MealLog>> 형태로 변경
+  // Change to Map<String, List<MealLog>> format
   Map<String, List<MealLog>> _dietLogsByDate = {};
   final FoodService _foodService = FoodService();
 
@@ -33,38 +32,60 @@ class DietLogScreenState extends State<DietLogScreen> {
     String dateKey = _getDateKey(widget.selectedDay);
     if (!_dietLogsByDate.containsKey(dateKey)) {
       _dietLogsByDate[dateKey] = [
-        MealLog(), // 첫 번째 끼니
-        MealLog(), // 두 번째 끼니
-        MealLog(), // 세 번째 끼니
+        MealLog(), // First meal
+        MealLog(), // Second meal
+        MealLog(), // Third meal
       ];
     }
     return _dietLogsByDate[dateKey]!;
   }
 
-  // **추가: 챗봇 응답 저장 변수**
+  // **Added: Variable to store ChatBot response**
   String _chatBotResponse = '';
+  bool _isFeedbackExpanded = false; // Feedback expansion state
 
-  // 프로그램 데이터를 저장할 변수
+  // Variables to store program data
   ProgramUserData? _currentProgramData;
-  String? _currentProgramType; // 현재 프로그램 타입
+  String? _currentProgramType; // Current program type
+
+  // 챗봇 피드백을 초기화하는 함수 (앱 실행 시 체크)
+  void _initializeChatBotFeedback() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // 앱 실행 시, 저장된 챗봇 피드백을 가져온다
+    final storedResponse = prefs.getString('chatBotResponse_${_getDateKey(widget.selectedDay)}');
+
+    // MealLog에 음식이 하나라도 있으면 피드백을 표시, 아니면 초기화
+    bool isAnyMealWithFood = _mealLogs.any((mealLog) => mealLog.foods.isNotEmpty);
+
+    if (isAnyMealWithFood) {
+      // 음식이 있다면 이전에 저장된 챗봇 피드백을 로드
+      setState(() {
+        _chatBotResponse = storedResponse ?? '';  // 저장된 피드백을 불러오기
+        _isFeedbackExpanded = false;  // 피드백 닫기
+      });
+    } else {
+      // MealLog에 음식이 없으면 챗봇 피드백 초기화
+      setState(() {
+        _chatBotResponse = '';  // 피드백 초기화
+        _isFeedbackExpanded = false;  // 피드백 닫기
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _loadDietLogs();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadProgramData();
-    });
+    _initializeChatBotFeedback();  // 앱 실행 시 챗봇 피드백 초기화
   }
 
-
-  /// 프로그램 데이터 로드
+  /// Load program data
   Future<void> _loadProgramData() async {
     final userDataService = Provider.of<UserDataService>(context, listen: false);
-    await userDataService.loadProgramUserData(); // 프로그램 데이터 로드
+    await userDataService.loadProgramUserData(); // Load program data
 
-    // 현재 활성화된 프로그램 타입을 결정합니다.
-    // 'Bulking' 또는 'Cutting' 중 하나가 설정되어 있다고 가정합니다.
+    // Determine the currently active program type.
+    // Assuming either 'Bulking' or 'Cutting' is set.
     _currentProgramType = userDataService.currentProgramType;
 
     if (_currentProgramType == 'Bulking') {
@@ -75,11 +96,22 @@ class DietLogScreenState extends State<DietLogScreen> {
       _currentProgramData = null;
     }
 
-    setState(() {}); // UI 업데이트
+    setState(() {}); // Update UI
+  }
+
+  /// Load ChatBot response
+  Future<void> _loadChatBotResponse() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? savedResponse = prefs.getString('chatBotResponse_${_getDateKey(widget.selectedDay)}');
+    if (savedResponse != null) {
+      setState(() {
+        _chatBotResponse = savedResponse;
+      });
+    }
   }
 
   String _getDateKey(DateTime date) {
-    return date.toIso8601String().split('T')[0]; // 'YYYY-MM-DD' 형식
+    return date.toIso8601String().split('T')[0]; // Format 'YYYY-MM-DD'
   }
 
   Future<void> _saveDietLogs() async {
@@ -95,47 +127,50 @@ class DietLogScreenState extends State<DietLogScreen> {
       const SnackBar(content: Text('Diet logs saved successfully')),
     );
 
-    // **추가: 챗봇에게 식단 피드백 요청**
+    // **Added: Request diet feedback from ChatBot**
     await _requestChatBotFeedback();
   }
 
-  /// 챗봇에게 식단 피드백 요청
   Future<void> _requestChatBotFeedback() async {
-    print('_requestChatBotFeedback called'); // 디버깅용 출력
+    bool isAnyMealWithFood = _mealLogs.any((mealLog) => mealLog.foods.isNotEmpty);
+    if (!isAnyMealWithFood) {
+      // MealLog에 음식이 없으면 피드백을 요청하지 않음
+      if (mounted) {
+        setState(() {
+          _chatBotResponse = '';  // 피드백 초기화
+        });
+      }
+      return;
+    }
 
-    // **사용자의 최신 몸무게와 체지방률 가져오기**
+    // User Data 및 MealLog 정보를 사용해 챗봇 피드백 요청
     final userDataService = Provider.of<UserDataService>(context, listen: false);
     if (userDataService.profileUserDataList.isEmpty) {
       _showSnackBar('Please enter your weight and body fat in the Profile screen.');
-      print('User data list is empty'); // 디버깅용 출력
       return;
     }
 
     final latestUserData = userDataService.profileUserDataList.last;
     final weight = latestUserData.weight;
     final bodyFat = latestUserData.bodyFat;
-    print('Latest User Data - Weight: $weight kg, Body Fat: $bodyFat%'); // 디버깅용 출력
 
-    // **식단 정보 구성**
+    // Compose diet information based on remaining food items
     String dietDescription = '';
     for (int i = 0; i < _mealLogs.length; i++) {
       final meal = _mealLogs[i];
+      if (meal.foods.isEmpty) continue;  // Skip empty meals
       dietDescription += 'Meal ${i + 1}:\n';
       for (var food in meal.foods) {
         dietDescription += '- ${food.name}: ${food.quantity}g\n';
       }
     }
-    print('Diet Description:\n$dietDescription'); // 디버깅용 출력
 
-    // **챗봇에게 보낼 프롬프트 구성**
-    String prompt = 'Based on the following information:\n'
+    String prompt = 'Please provide feedback on the following diet based on the information below:\n'
         'Weight: $weight kg\n'
         'Body Fat: $bodyFat%\n'
         'Today\'s Diet:\n$dietDescription\n'
-        'Please provide feedback on this diet. How balanced is it? Are there any improvements you can suggest?';
-    print('Prompt to ChatBot: $prompt'); // 디버깅용 출력
+        'How balanced is this diet? Are there any improvements you can suggest?';
 
-    // **ApiService를 통해 프롬프트 전송 및 응답 받기**
     final apiService = Provider.of<ApiService>(context, listen: false);
     String response;
     try {
@@ -143,26 +178,29 @@ class DietLogScreenState extends State<DietLogScreen> {
         Message(role: 'system', content: 'You are a helpful assistant.'),
         Message(role: 'user', content: prompt),
       ]);
-      print('Parsed ChatBot Response: $response'); // 디버깅용 출력
     } catch (e) {
-      response = '챗봇과의 통신 중 오류가 발생했습니다: $e';
-      print('Error in sendMessage: $e'); // 디버깅용 출력
+      response = 'An error occurred while communicating with the ChatBot: $e';
     }
 
-    // **응답을 상태에 저장하여 화면에 표시**
-    setState(() {
-      _chatBotResponse = response;
-      print('_chatBotResponse set to: $_chatBotResponse'); // 디버깅용 출력
-    });
+    // Only update UI if widget is still mounted
+    if (mounted) {
+      setState(() {
+        _chatBotResponse = response;
+        _isFeedbackExpanded = false;
+      });
+
+      // 저장된 피드백을 SharedPreferences에 저장
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('chatBotResponse_${_getDateKey(widget.selectedDay)}', response);
+    }
   }
 
-
-  /// 식단 로그 로드
+  /// Load diet logs
   Future<void> _loadDietLogs() async {
     final prefs = await SharedPreferences.getInstance();
     String? data = prefs.getString('dietLogs');
     if (data != null) {
-      print('Loading dietLogs: $data'); // 디버깅용 출력
+      print('Loading dietLogs: $data'); // Debugging output
       try {
         Map<String, dynamic> jsonData = jsonDecode(data);
         setState(() {
@@ -184,7 +222,7 @@ class DietLogScreenState extends State<DietLogScreen> {
     }
   }
 
-  /// 특정 끼니에 음식 추가
+  /// Add food to a specific meal
   Future<void> _addDiet(int mealIndex) async {
     final bool? isAdd = await showDialog<bool>(
       context: context,
@@ -200,13 +238,13 @@ class DietLogScreenState extends State<DietLogScreen> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(dialogContext).pop(true); // 'Yes' 선택
+                      Navigator.of(dialogContext).pop(true); // Select 'Yes'
                     },
                     child: const Text('Yes'),
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(dialogContext).pop(false); // 'No' 선택
+                      Navigator.of(dialogContext).pop(false); // Select 'No'
                     },
                     child: const Text('No'),
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.red[200]),
@@ -288,7 +326,7 @@ class DietLogScreenState extends State<DietLogScreen> {
                         leading: Image.network(food['photo']),
                         title: Text(food['food_name']),
                         onTap: () async {
-                          Navigator.pop(sheetContext); // BottomSheet 닫기
+                          Navigator.pop(sheetContext); // Close BottomSheet
                           final nutrients = await _foodService.getFoodNutrients(food['food_name']);
                           _showQuantitySliderDialog(mealIndex, nutrients);
                         },
@@ -305,7 +343,7 @@ class DietLogScreenState extends State<DietLogScreen> {
   }
 
   void _showQuantitySliderDialog(int mealIndex, Map<String, dynamic> food) async {
-    double servingSize = 1.0; // 기본값
+    double servingSize = 1.0; // Default value
 
     final updatedServingSize = await showDialog<double>(
       context: context,
@@ -334,8 +372,8 @@ class DietLogScreenState extends State<DietLogScreen> {
       carbs: (food['carbs'] as num).toDouble() * servingSize,
       protein: (food['protein'] as num).toDouble() * servingSize,
       fat: (food['fat'] as num).toDouble() * servingSize,
-      quantity: quantityInGrams, // 그램 단위로 저장
-      servingWeightGrams: servingWeightGrams, // 1회 제공량 저장
+      quantity: quantityInGrams, // Store in grams
+      servingWeightGrams: servingWeightGrams, // Store serving size
     );
 
     setState(() {
@@ -343,22 +381,29 @@ class DietLogScreenState extends State<DietLogScreen> {
     });
   }
 
-  /// 음식 삭제
+  /// Delete food from diet log
   void _removeFoodFromDietLog(int mealIndex, int foodIndex) {
     setState(() {
       _mealLogs[mealIndex].foods.removeAt(foodIndex);
+
+      // Check if the meal is empty after removal
+      if (_mealLogs[mealIndex].foods.isEmpty) {
+        // If all food items are removed from the meal, we don't request feedback
+        _chatBotResponse = '';  // Reset the feedback if the meal is empty
+        _isFeedbackExpanded = false;
+      }
     });
   }
 
-  /// 음식 수정
+  /// Edit food in diet log
   void _editFoodInDietLog(int mealIndex, int foodIndex) async {
     final consumedFood = _mealLogs[mealIndex].foods[foodIndex];
     double servingSize = consumedFood.quantity / consumedFood.servingWeightGrams;
 
-    // servingSize가 Slider의 범위를 벗어나지 않도록 클램핑
+    // Clamp servingSize to stay within slider range
     servingSize = servingSize.clamp(0.5, 3.0).toDouble();
 
-    // 다이얼로그에서 수정된 servingSize를 반환받기 위해 await 사용
+    // Await the updated servingSize from the dialog
     final updatedServingSize = await showDialog<double>(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -371,7 +416,7 @@ class DietLogScreenState extends State<DietLogScreen> {
 
     if (updatedServingSize != null) {
       setState(() {
-        // ConsumedFood 객체를 업데이트
+        // Update the ConsumedFood object
         _mealLogs[mealIndex].foods[foodIndex] = ConsumedFood(
           name: consumedFood.name,
           carbsPerServing: consumedFood.carbsPerServing,
@@ -381,13 +426,13 @@ class DietLogScreenState extends State<DietLogScreen> {
           protein: consumedFood.proteinPerServing * updatedServingSize,
           fat: consumedFood.fatPerServing * updatedServingSize,
           quantity: consumedFood.servingWeightGrams * updatedServingSize,
-          servingWeightGrams: consumedFood.servingWeightGrams, // 유지
+          servingWeightGrams: consumedFood.servingWeightGrams, // Maintain
         );
       });
     }
   }
 
-  /// 하루 총 영양소 계산
+  /// Calculate total nutrients for the day
   Map<String, double> _calculateTotalNutrients() {
     double totalCarbs = 0.0;
     double totalProtein = 0.0;
@@ -408,7 +453,7 @@ class DietLogScreenState extends State<DietLogScreen> {
     };
   }
 
-  /// 에러 다이얼로그 표시
+  /// Show error dialog
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -427,25 +472,27 @@ class DietLogScreenState extends State<DietLogScreen> {
     );
   }
 
-  /// 끼니 추가
+  /// Add a new meal
   void _addNewMeal() {
     setState(() {
       _mealLogs.add(MealLog());
     });
   }
 
-  /// 끼니 삭제
+  /// Remove a meal
   void _removeMeal(int mealIndex) {
     setState(() {
       _mealLogs.removeAt(mealIndex);
     });
   }
 
-  /// 챗봇 응답 표시
+  /// Display ChatBot response (with summary and expand functionality)
   Widget _buildChatBotResponse() {
     if (_chatBotResponse.isEmpty) {
       return const SizedBox.shrink();
     }
+
+    // Limit feedback to 3 lines using Text widget's maxLines and overflow
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Card(
@@ -453,18 +500,54 @@ class DietLogScreenState extends State<DietLogScreen> {
         elevation: 2,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Text(
-            _chatBotResponse,
-            style: const TextStyle(fontSize: 16, color: Colors.black87),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'ChatBot Diet Feedback',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _isFeedbackExpanded
+                  ? Text(
+                _chatBotResponse,
+                style: const TextStyle(fontSize: 16, color: Colors.black87),
+              )
+                  : Text(
+                _chatBotResponse,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 16, color: Colors.black87),
+              ),
+              if (_chatBotResponse.split('\n').length > 3)
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isFeedbackExpanded = !_isFeedbackExpanded;
+                    });
+                  },
+                  child: Text(
+                    _isFeedbackExpanded ? '...Collapse' : '...More',
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  /// 스낵바 표시
+  /// Show SnackBar
   void _showSnackBar(String message) {
-    if (!mounted) return; // 위젯이 마운트되어 있는지 확인
+    if (!mounted) return; // Check if the widget is mounted
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
@@ -487,12 +570,12 @@ class DietLogScreenState extends State<DietLogScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 총 영양소 카드
+            // Total Nutrients Card
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  // Total Nutrient Intake 카드
+                  // Total Nutrient Intake Card
                   Expanded(
                     child: Card(
                       elevation: 4,
@@ -526,8 +609,8 @@ class DietLogScreenState extends State<DietLogScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16), // 카드 간 간격
-                  // Program Targets 카드
+                  const SizedBox(width: 16), // Space between cards
+                  // Program Targets Card
                   Expanded(
                     child: Card(
                       color: Colors.lightBlue[50],
@@ -555,11 +638,11 @@ class DietLogScreenState extends State<DietLogScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 SizedBox(
-                                  width: 80, // 버튼의 너비 조절
-                                  height: 40, // 버튼의 높이 조절
+                                  width: 80, // Adjust button width
+                                  height: 40, // Adjust button height
                                   child: ElevatedButton(
                                     onPressed: () async {
-                                      // Bulking 프로그램 화면으로 이동
+                                      // Navigate to Bulking program screen
                                       await Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -569,7 +652,6 @@ class DietLogScreenState extends State<DietLogScreen> {
                                       _loadProgramData();
                                     },
                                     style: ElevatedButton.styleFrom(
-
                                       textStyle: const TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
@@ -578,13 +660,13 @@ class DietLogScreenState extends State<DietLogScreen> {
                                     child: const Text('Bulk'),
                                   ),
                                 ),
-                                // Cutting 버튼
+                                // Cutting button
                                 SizedBox(
-                                  width: 80, // 버튼의 너비 조절
-                                  height: 40, // 버튼의 높이 조절
+                                  width: 80, // Adjust button width
+                                  height: 40, // Adjust button height
                                   child: ElevatedButton(
                                     onPressed: () async {
-                                      // Cutting 프로그램 화면으로 이동
+                                      // Navigate to Cutting program screen
                                       await Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -637,7 +719,7 @@ class DietLogScreenState extends State<DietLogScreen> {
                 ],
               ),
             ),
-            // 끼니 카드들
+            // Meal Cards
             ..._mealLogs.asMap().entries.map((entry) {
               final index = entry.key;
               final mealLog = entry.value;
@@ -662,7 +744,7 @@ class DietLogScreenState extends State<DietLogScreen> {
                     elevation: 2,
                     child: Column(
                       children: [
-                        // 식사명과 추가 버튼
+                        // Meal name and add button
                         ListTile(
                           title: Text(
                             _getMealName(index),
@@ -676,7 +758,7 @@ class DietLogScreenState extends State<DietLogScreen> {
                             onPressed: () => _addDiet(index),
                           ),
                         ),
-                        // 음식 목록
+                        // Food list
                         if (mealLog.foods.isNotEmpty)
                           ListView.builder(
                             shrinkWrap: true,
@@ -733,9 +815,7 @@ class DietLogScreenState extends State<DietLogScreen> {
                 ),
               );
             }).toList(),
-            // **추가: 챗봇 응답 표시**
-            _buildChatBotResponse(),
-            // 끼니 추가 버튼
+            // Add Meal button
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: ElevatedButton.icon(
@@ -748,6 +828,8 @@ class DietLogScreenState extends State<DietLogScreen> {
                 label: const Text('Add Meal'),
               ),
             ),
+            // **Added: Display ChatBot response (Feedback Card)**
+            _buildChatBotResponse(),
           ],
         ),
       ),
