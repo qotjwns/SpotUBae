@@ -182,12 +182,12 @@ class CalendarScreenState extends State<CalendarScreen> {
               _focusedDay = focusedDay;
             },
             calendarStyle: CalendarStyle(
-              selectedDecoration: BoxDecoration(
-                color: Colors.black,
-                shape: BoxShape.circle
-              ),
+              // selectedDecoration: BoxDecoration(
+              //   color: Colors.black12,
+              //   shape: BoxShape.circle
+              // ),
               todayDecoration: BoxDecoration(
-                color: Colors.grey,
+                color: Colors.black12,
                 shape: BoxShape.circle
               )
             ),
@@ -203,7 +203,7 @@ class CalendarScreenState extends State<CalendarScreen> {
                     indicators.add(
                       FaIcon(
                         FontAwesomeIcons.solidCircleCheck, // 두꺼운 체크 아이콘
-                        color: Colors.black,
+                        color: Colors.blueAccent,
                         size: 16, // 아이콘 크기 조정
                       ),
                     );
@@ -232,6 +232,50 @@ class CalendarScreenState extends State<CalendarScreen> {
                   );
                 }
                 return null;
+              },
+              selectedBuilder: (context, date, focusedDay) {
+                bool isToday = isSameDay(date, DateTime.now());
+                if (isToday) {
+                  // 오늘 날짜일 때: 채워진 원
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black12,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '${date.day}',
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                  );
+                } else {
+                  // 오늘이 아닌 선택된 날짜일 때: 외곽선만 있는 원
+                  return Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey,width: 2),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '${date.day}',
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                  );
+                }
+              },
+              todayBuilder: (context, date, focusedDay) {
+                // 오늘 날짜의 빌더를 별도로 정의할 수 있습니다.
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black12,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${date.day}',
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                );
               },
             ),
           ),
