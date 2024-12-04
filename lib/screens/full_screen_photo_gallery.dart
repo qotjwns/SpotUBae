@@ -1,5 +1,3 @@
-// lib/screens/full_screen_photo_gallery.dart
-
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -30,6 +28,12 @@ class FullScreenPhotoGalleryState extends State<FullScreenPhotoGallery> {
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
@@ -40,7 +44,8 @@ class FullScreenPhotoGalleryState extends State<FullScreenPhotoGallery> {
               return PhotoViewGalleryPageOptions(
                 imageProvider: FileImage(File(widget.photos[index].path)),
                 initialScale: PhotoViewComputedScale.contained,
-                heroAttributes: PhotoViewHeroAttributes(tag: widget.photos[index].path),
+                heroAttributes:
+                    PhotoViewHeroAttributes(tag: widget.photos[index].path),
               );
             },
             itemCount: widget.photos.length,
@@ -60,11 +65,5 @@ class FullScreenPhotoGalleryState extends State<FullScreenPhotoGallery> {
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
   }
 }

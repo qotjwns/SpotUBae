@@ -1,5 +1,3 @@
-// lib/models/consumed_food.dart
-
 class ConsumedFood {
   final String name;
   final double carbsPerServing;
@@ -8,8 +6,10 @@ class ConsumedFood {
   final double carbs;
   final double protein;
   final double fat;
-  final double quantity; // 그램 단위
-  final double servingWeightGrams; // 1회 제공량 그램 단위
+  final double
+      quantity; // 그램 단위 OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
+  final double
+      servingWeightGrams; // 1회 제공량 그램 단위 OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
   ConsumedFood({
     required this.name,
@@ -33,7 +33,9 @@ class ConsumedFood {
       protein: (json['protein'] as num).toDouble(),
       fat: (json['fat'] as num).toDouble(),
       quantity: (json['quantity'] as num).toDouble(),
-      servingWeightGrams: (json['servingWeightGrams'] as num).toDouble(),
+      //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
+      servingWeightGrams: (json['servingWeightGrams'] as num)
+          .toDouble(), //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
     );
   }
 
@@ -47,7 +49,9 @@ class ConsumedFood {
       'protein': protein,
       'fat': fat,
       'quantity': quantity,
+      //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
       'servingWeightGrams': servingWeightGrams,
+      //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
     };
   }
 }

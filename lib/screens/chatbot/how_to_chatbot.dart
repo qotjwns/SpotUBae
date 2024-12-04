@@ -2,19 +2,18 @@ import 'package:flutter/material.dart';
 import '../../models/message.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
-import '../make_routine_screens/workout_selection_screen.dart';
 import 'package:provider/provider.dart';
 
-class ChatBotScreen extends StatefulWidget {
+class HowToChatbot extends StatefulWidget {
   final String workoutType;
 
-  const ChatBotScreen({super.key, required this.workoutType});
+  const HowToChatbot({super.key, required this.workoutType});
 
   @override
   ChatBotScreenState createState() => ChatBotScreenState();
 }
 
-class ChatBotScreenState extends State<ChatBotScreen> {
+class ChatBotScreenState extends State<HowToChatbot> {
   final List<Message> _messages = [];
   final ScrollController _scrollController = ScrollController();
   late ApiService _apiService;
@@ -57,8 +56,7 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   void _sendPredefinedMessage(String messageContent) {
     final userMessage = Message(
       role: 'user',
-      content:
-          "A set of events for $messageContent ${widget.workoutType} exercise routines, repeat the number of repetitions, and just summarize the break time. Take out what you don't need in the middle, note, introduction",
+      content: "$messageContent ${widget.workoutType}. How can i do?",
       timestamp: DateTime.now(),
     );
 
@@ -85,7 +83,6 @@ class ChatBotScreenState extends State<ChatBotScreen> {
           _isLoading = false;
         });
       }
-      handleWorkoutResponse(botResponse, widget.workoutType.toLowerCase());
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -93,22 +90,6 @@ class ChatBotScreenState extends State<ChatBotScreen> {
         });
       }
     }
-  } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
-
-  void handleWorkoutResponse(String response, String workoutType) async {
-    // 운동 종목 추출
-    List<String> matchingExercises =
-        _storageService.extractMatchingExercises(response, workoutType);
-
-    if (matchingExercises.isNotEmpty) {
-      // 운동 종목 저장 (해당 부위) - append
-      await _storageService.addExercisesToDownload(
-          matchingExercises, workoutType);
-
-      // recommendation 운동 종목 저장 (항상 "recommendation"으로 저장) - append
-      await _storageService.addExercisesToDownload(
-          matchingExercises, "recommendation");
-    } else {}
   } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
   void _saveMessages() {
@@ -125,7 +106,6 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     setState(() {
       _messages.add(errorMessage);
     });
-
     _saveMessages();
     _scrollToBottom();
   }
@@ -239,19 +219,9 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${_capitalize(widget.workoutType)} Workout Chatbot'),
+        title: Text('${_capitalize(widget.workoutType)} Chatbot'),
         actions: [
           IconButton(onPressed: _resetChat, icon: const Icon(Icons.refresh)),
-          IconButton(
-            icon: const Icon(Icons.arrow_forward),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const WorkoutSelectionScreen(),
-                ),
-              );
-            },
-          ),
         ],
       ),
       body: Column(

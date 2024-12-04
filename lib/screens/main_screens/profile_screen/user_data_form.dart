@@ -1,10 +1,7 @@
-// lib/screens/main_screens/profile_screen/user_data_form.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../services/user_data_service.dart';
 import '../../../models/user_data.dart';
-import '../../../models/program_user_data.dart';
 import 'confirmation_dialog.dart';
 import '../../../widgets/widget_for_profile/number_input_box.dart';
 
@@ -36,21 +33,26 @@ class UserDataFormState extends State<UserDataForm> {
   }
 
   Future<void> _loadUserData() async {
-    final userDataService = Provider.of<UserDataService>(context, listen: false);
+    final userDataService =
+        Provider.of<UserDataService>(context, listen: false);
     await userDataService.loadProfileUserData();
     await userDataService.loadProgramUserData();
 
-    // 현재 프로그램 타입을 가져옴
     String? programType = userDataService.currentProgramType;
 
-    // 프로그램 데이터가 존재하면 폼에 미리 채워넣기
     if (programType != null) {
-      if (programType == 'Bulking' && userDataService.bulkingProgramData != null) {
-        _weightController.text = userDataService.bulkingProgramData!.currentWeight.toString();
-        _bodyFatController.text = userDataService.bulkingProgramData!.currentBodyFat.toString();
-      } else if (programType == 'Cutting' && userDataService.cuttingProgramData != null) {
-        _weightController.text = userDataService.cuttingProgramData!.currentWeight.toString();
-        _bodyFatController.text = userDataService.cuttingProgramData!.currentBodyFat.toString();
+      if (programType == 'Bulking' &&
+          userDataService.bulkingProgramData != null) {
+        _weightController.text =
+            userDataService.bulkingProgramData!.currentWeight.toString();
+        _bodyFatController.text =
+            userDataService.bulkingProgramData!.currentBodyFat.toString();
+      } else if (programType == 'Cutting' &&
+          userDataService.cuttingProgramData != null) {
+        _weightController.text =
+            userDataService.cuttingProgramData!.currentWeight.toString();
+        _bodyFatController.text =
+            userDataService.cuttingProgramData!.currentBodyFat.toString();
       }
     }
   }
@@ -71,12 +73,13 @@ class UserDataFormState extends State<UserDataForm> {
       return;
     }
 
-    if (weight <= 0 || bodyFat < 0 || bodyFat > 100) {
-      _showSnackBar('Please enter realistic values.');
+    if (weight <= 0 || bodyFat < 0 || bodyFat > 100 || weight > 150) {
+      _showSnackBar('Please enter valid values. weight < 150');
       return;
     }
 
-    final userDataService = Provider.of<UserDataService>(context, listen: false);
+    final userDataService =
+        Provider.of<UserDataService>(context, listen: false);
     String? programType = userDataService.currentProgramType;
 
     if (programType == null) {
@@ -84,44 +87,46 @@ class UserDataFormState extends State<UserDataForm> {
       return;
     }
 
-    // 새로운 프로필 데이터 생성
     UserData newData = UserData(
       date: DateTime.now(),
       weight: weight,
       bodyFat: bodyFat,
     );
 
-    // 프로필 데이터 추가 또는 업데이트
-    await userDataService.addOrUpdateProfileUserData(newData);
+    await userDataService.addOrUpdateProfileUserData(
+        newData); //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
-    // 프로그램 데이터가 존재하면 특정 필드만 업데이트
-    if (programType == 'Bulking' && userDataService.bulkingProgramData != null) {
+    if (programType == 'Bulking' &&
+        userDataService.bulkingProgramData != null) {
       await userDataService.updateProgramUserData(
         programType: 'Bulking',
         currentWeight: weight,
         currentBodyFat: bodyFat,
       );
-    } else if (programType == 'Cutting' && userDataService.cuttingProgramData != null) {
-
+    } else if (programType == 'Cutting' &&
+        userDataService.cuttingProgramData != null) {
       await userDataService.updateProgramUserData(
         programType: 'Cutting',
         currentWeight: weight,
         currentBodyFat: bodyFat,
-      );
+      ); //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
     }
 
     _showSnackBar('Your data has been saved successfully.');
-
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Your data has been saved successfully.')),
+    );
     _weightController.clear();
     _bodyFatController.clear();
   }
 
   void _showSnackBar(String message) {
-    if (!mounted) return; // 위젯이 마운트되어 있는지 확인
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
-  }
+  } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
   void _validateInputs() {
     setState(() {
@@ -152,7 +157,8 @@ class UserDataFormState extends State<UserDataForm> {
   Future<void> _resetUserData() async {
     if (!mounted) return;
 
-    final userDataService = Provider.of<UserDataService>(context, listen: false);
+    final userDataService =
+        Provider.of<UserDataService>(context, listen: false);
 
     bool confirm = await showConfirmationDialog(
       context,
@@ -161,19 +167,19 @@ class UserDataFormState extends State<UserDataForm> {
     );
 
     if (confirm) {
-      await userDataService.resetProfileUserData(); // 변경된 부분
+      await userDataService
+          .resetProfileUserData(); //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
       _showSnackBar('Profile data has been reset.');
       _weightController.clear();
       _bodyFatController.clear();
-
     }
   }
 
   bool get _isSaveEnabled =>
       _weightError == null &&
-          _bodyFatError == null &&
-          _weightController.text.isNotEmpty &&
-          _bodyFatController.text.isNotEmpty;
+      _bodyFatError == null &&
+      _weightController.text.isNotEmpty &&
+      _bodyFatController.text.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +221,7 @@ class UserDataFormState extends State<UserDataForm> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey,
                 padding:
-                const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
               ),
               onPressed: _isSaveEnabled ? _saveUserData : null,
               child: const Text(
@@ -234,7 +240,7 @@ class UserDataFormState extends State<UserDataForm> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
                 padding:
-                const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
               ),
               onPressed: _resetUserData,
               child: const Text(

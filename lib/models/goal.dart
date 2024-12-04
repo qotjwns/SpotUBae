@@ -1,7 +1,5 @@
-// lib/models/goal.dart
-
 class Goal {
-  final String type; // "daily", "weekly", "monthly"
+  final String type;
   final String? value;
   final DateTime? setDate;
 
@@ -20,8 +18,8 @@ class Goal {
   }
 
   Map<String, dynamic> toJson() => {
-    'type': type,
-    'value': value,
-    'setDate': setDate?.toIso8601String(),
-  };
+        'type': type,
+        'value': value,
+        'setDate': setDate?.toIso8601String(),
+      };
 }

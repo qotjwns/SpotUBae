@@ -1,5 +1,3 @@
-// lib/services/goal_manage_service.dart
-
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -59,7 +57,6 @@ class GoalManageService extends ChangeNotifier {
     await _saveGoal(newGoal);
   }
 
-  // 공개 메서드: 특정 목표 초기화
   Future<void> resetGoal(String type) async {
     await _resetGoal(type);
   }
@@ -82,21 +79,18 @@ class GoalManageService extends ChangeNotifier {
   void _checkAndResetGoals() {
     DateTime now = DateTime.now();
 
-    // 일일 목표 초기화
     if (_dailyGoal != null) {
       if (!_isSameDay(now, _dailyGoal!.setDate!)) {
         _resetGoal('daily');
       }
     }
 
-    // 주간 목표 초기화
     if (_weeklyGoal != null) {
       if (!_isSameWeek(now, _weeklyGoal!.setDate!)) {
         _resetGoal('weekly');
       }
     }
 
-    // 월간 목표 초기화
     if (_monthlyGoal != null) {
       if (!_isSameMonth(now, _monthlyGoal!.setDate!)) {
         _resetGoal('monthly');
@@ -109,16 +103,15 @@ class GoalManageService extends ChangeNotifier {
   }
 
   bool _isSameWeek(DateTime a, DateTime b) {
-    // ISO week number 계산
     int weekNumber(DateTime date) {
       int dayOfYear = int.parse(DateFormat("D").format(date));
       return ((dayOfYear - date.weekday + 10) / 7).floor();
     }
 
     return a.year == b.year && weekNumber(a) == weekNumber(b);
-  }
+  } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
   bool _isSameMonth(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month;
-  }
+  } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 }

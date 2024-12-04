@@ -1,4 +1,3 @@
-// lib/widgets/animated_elevated_button.dart
 
 import 'package:flutter/material.dart';
 

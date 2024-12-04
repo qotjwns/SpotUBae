@@ -1,9 +1,6 @@
-// lib/widgets/widget_for_profile/user_data_chart.dart
-
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../models/user_data.dart';
-
 
 class UserDataChart extends StatelessWidget {
   final List<UserData> userDataList;
@@ -29,7 +26,8 @@ class UserDataChart extends StatelessWidget {
 
     for (int i = 0; i < sortedData.length; i++) {
       weightSpots.add(FlSpot(i.toDouble(), sortedData[i].weight.toDouble()));
-      bodyFatSpots.add(FlSpot(i.toDouble(), sortedData[i].bodyFat.toDouble()));
+      bodyFatSpots
+          .add(FlSpot(i.toDouble(), sortedData[i].bodyFat.toDouble() * 1.5));
     }
 
     return Column(
@@ -38,15 +36,16 @@ class UserDataChart extends StatelessWidget {
           child: LineChart(
             LineChartData(
               titlesData: FlTitlesData(
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 rightTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 40,
-                    interval: 10, // 체지방률 10% 단위
+                    interval: 15, // 150 / 10 = 15
                     getTitlesWidget: (value, meta) {
-                      double bodyFatValue = value;
-                      if (bodyFatValue % 10 == 0) { // 10% 단위로 표시
+                      double bodyFatValue = value / 1.5;
+                      if (bodyFatValue % 10 == 0) {
                         return Text(
                           '${bodyFatValue.toInt()}%',
                           style: const TextStyle(
@@ -88,9 +87,9 @@ class UserDataChart extends StatelessWidget {
                   sideTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 40,
-                    interval: 20, // 무게 20kg 단위
+                    interval: 10,
                     getTitlesWidget: (value, meta) {
-                      if (value % 20 == 0) {
+                      if (value % 10 == 0) {
                         return Text(
                           '${value.toInt()}kg',
                           style: const TextStyle(fontSize: 10),
@@ -137,12 +136,11 @@ class UserDataChart extends StatelessWidget {
                 ),
               ],
               minY: 0,
-              maxY: maxY,
+              maxY: 150,
             ),
           ),
         ),
-
       ],
     );
   }
-}
+} //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com

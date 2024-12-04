@@ -1,5 +1,3 @@
-// lib/models/program_user_data.dart
-
 class ProgramUserData {
   final int age;
   final String gender;
@@ -8,9 +6,8 @@ class ProgramUserData {
   double currentBodyFat;
   final double goalWeight;
   final double goalBodyFat;
-  String programType; // final 제거하여 mutable로 변경
-
-  // 추가된 필드
+  String
+      programType; // final 제거하여 mutable로 변경, OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
   double dailyCarbs;
   double dailyProtein;
   double dailyFat;
@@ -31,17 +28,22 @@ class ProgramUserData {
 
   factory ProgramUserData.fromMap(Map<String, dynamic> map) {
     return ProgramUserData(
-      age: map['age'] ?? 25, // 기본값 설정
-      gender: map['gender'] ?? 'male', // 기본값 설정
+      age: map['age'] ?? 25,
+      gender: map['gender'] ?? 'male',
       currentWeight: (map['currentWeight'] as num).toDouble(),
       height: (map['height'] as num).toDouble(),
       currentBodyFat: (map['currentBodyFat'] as num).toDouble(),
       goalWeight: (map['goalWeight'] as num).toDouble(),
       goalBodyFat: (map['goalBodyFat'] as num).toDouble(),
-      programType: map['programType'] ?? 'Bulking', // 기본값 설정
-      dailyCarbs: map['dailyCarbs'] != null ? (map['dailyCarbs'] as num).toDouble() : 0.0,
-      dailyProtein: map['dailyProtein'] != null ? (map['dailyProtein'] as num).toDouble() : 0.0,
-      dailyFat: map['dailyFat'] != null ? (map['dailyFat'] as num).toDouble() : 0.0,
+      programType: map['programType'] ?? 'Bulking',
+      dailyCarbs: map['dailyCarbs'] != null
+          ? (map['dailyCarbs'] as num).toDouble()
+          : 0.0,
+      dailyProtein: map['dailyProtein'] != null
+          ? (map['dailyProtein'] as num).toDouble()
+          : 0.0,
+      dailyFat:
+          map['dailyFat'] != null ? (map['dailyFat'] as num).toDouble() : 0.0,
     );
   }
 

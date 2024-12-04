@@ -1,4 +1,3 @@
-// lib/widgets/goal_body_fat_input_field.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

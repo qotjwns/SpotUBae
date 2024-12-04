@@ -1,5 +1,3 @@
-// lib/services/food_service.dart
-
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -7,7 +5,6 @@ class FoodService {
   final String appId = '9b6fd567';
   final String appKey = '0354b40e9df9c5fbdfc2ae8159fcb963';
 
-  /// 음식 검색 함수
   Future<List<Map<String, dynamic>>> searchFoods(String query) async {
     final url = Uri.parse(
         'https://trackapi.nutritionix.com/v2/search/instant?query=$query');
@@ -32,10 +29,9 @@ class FoodService {
     }
   }
 
-  /// 영양 정보 가져오기
   Future<Map<String, dynamic>> getFoodNutrients(String foodName) async {
     final url =
-    Uri.parse('https://trackapi.nutritionix.com/v2/natural/nutrients');
+        Uri.parse('https://trackapi.nutritionix.com/v2/natural/nutrients');
 
     final response = await http.post(url,
         headers: {
@@ -61,4 +57,4 @@ class FoodService {
       throw Exception('Failed to load nutrients');
     }
   }
-}
+} //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
