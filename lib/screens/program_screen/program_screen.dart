@@ -224,14 +224,20 @@ class ProgramScreenState extends State<ProgramScreen> {
     if (_formKey.currentState!.validate()) {
       _calculateMacrosAndExpectations();
       final userDataService =
-          Provider.of<UserDataService>(context, listen: false);
+      Provider.of<UserDataService>(context, listen: false);
       await userDataService.setCurrentProgramType(widget.programType);
+
+      double? goalWeight = double.tryParse(_goalWeightController.text);
+      double? goalBodyFat = double.tryParse(_goalBodyFatController.text);
+
       if (widget.programType == 'Bulking' &&
           userDataService.bulkingProgramData != null) {
         await userDataService.updateProgramUserData(
           programType: 'Bulking',
           currentWeight: double.parse(_currentWeightController.text),
           currentBodyFat: double.parse(_currentBodyFatController.text),
+          goalWeight: goalWeight,
+          goalBodyFat: goalBodyFat,
         );
       } else if (widget.programType == 'Cutting' &&
           userDataService.cuttingProgramData != null) {
@@ -239,6 +245,8 @@ class ProgramScreenState extends State<ProgramScreen> {
           programType: 'Cutting',
           currentWeight: double.parse(_currentWeightController.text),
           currentBodyFat: double.parse(_currentBodyFatController.text),
+          goalWeight: goalWeight,
+          goalBodyFat: goalBodyFat,
         );
       } else {
         ProgramUserData data = ProgramUserData(
@@ -256,8 +264,10 @@ class ProgramScreenState extends State<ProgramScreen> {
         );
         if (widget.programType == 'Bulking') {
           await userDataService.saveBulkingProgramData(data);
+          print("Bulking program data saved: ${data.toMap()}");
         } else if (widget.programType == 'Cutting') {
           await userDataService.saveCuttingProgramData(data);
+          print("Cutting program data saved: ${data.toMap()}");
         }
       }
 
@@ -266,6 +276,7 @@ class ProgramScreenState extends State<ProgramScreen> {
         latestData.weight = double.parse(_currentWeightController.text);
         latestData.bodyFat = double.parse(_currentBodyFatController.text);
         await userDataService.addOrUpdateProfileUserData(latestData);
+        print("Profile user data updated: ${latestData.toMap()}");
       } else {
         UserData newUserData = UserData(
           date: DateTime.now(),
@@ -273,9 +284,11 @@ class ProgramScreenState extends State<ProgramScreen> {
           bodyFat: double.parse(_currentBodyFatController.text),
         );
         await userDataService.addOrUpdateProfileUserData(newUserData);
+        print("New profile user data added: ${newUserData.toMap()}");
       }
     }
   }
+
 
   void _resetUserData() async {
     bool? confirm = await showDialog<bool>(

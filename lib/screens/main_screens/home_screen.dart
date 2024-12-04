@@ -225,6 +225,15 @@ class HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 30),
+                  const Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      "Please be careful to select program \nif you are currently in either program.\n       "
+                          "       Your data may be reset.",
+                      style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ],
               );
             },
