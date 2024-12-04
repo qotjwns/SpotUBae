@@ -1,5 +1,3 @@
-// lib/screens/calendar_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -23,7 +21,8 @@ class CalendarScreenState extends State<CalendarScreen> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
-  final ExerciseLogStorageService _logStorageService = ExerciseLogStorageService();
+  final ExerciseLogStorageService _logStorageService =
+      ExerciseLogStorageService();
   List<ExerciseLog> _selectedDayExerciseLogs = [];
 
   Map<String, List<MealLog>> _dietLogsByDate = {};
@@ -58,7 +57,8 @@ class CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _loadExerciseLogForSelectedDay() async {
-    List<ExerciseLog> logs = await _logStorageService.loadExerciseLogsByDate(_selectedDay);
+    List<ExerciseLog> logs =
+        await _logStorageService.loadExerciseLogsByDate(_selectedDay);
     setState(() {
       _selectedDayExerciseLogs = logs;
     });
@@ -75,7 +75,8 @@ class CalendarScreenState extends State<CalendarScreen> {
             return MapEntry(
               date,
               List<MealLog>.from(
-                (meals as List<dynamic>).map((mealJson) => MealLog.fromJson(mealJson)),
+                (meals as List<dynamic>)
+                    .map((mealJson) => MealLog.fromJson(mealJson)),
               ),
             );
           }).cast<String, List<MealLog>>();
@@ -124,7 +125,6 @@ class CalendarScreenState extends State<CalendarScreen> {
     });
   }
 
-  // 오늘로 돌아가기 버튼 동작
   void _goToToday() {
     final today = DateTime.now();
     setState(() {
@@ -142,12 +142,12 @@ class CalendarScreenState extends State<CalendarScreen> {
         toolbarHeight: 100,
         centerTitle: true,
         title: const Padding(
-          padding: EdgeInsets.only(top: 20.0), // 제목을 아래로 내리기 위한 상단 패딩 (필요에 따라 조정)
+          padding: EdgeInsets.only(top: 20.0),
           child: Text(
             'Calendar',
             style: TextStyle(
-              fontSize: 36, // 텍스트 크기 조정 (필요에 따라 조정)
-              fontWeight: FontWeight.bold, // 텍스트 두께 조정
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
@@ -182,16 +182,12 @@ class CalendarScreenState extends State<CalendarScreen> {
               _focusedDay = focusedDay;
             },
             calendarStyle: CalendarStyle(
-              // selectedDecoration: BoxDecoration(
-              //   color: Colors.black12,
-              //   shape: BoxShape.circle
-              // ),
-              todayDecoration: BoxDecoration(
-                color: Colors.black12,
-                shape: BoxShape.circle
-              )
-            ),
-
+                // selectedDecoration: BoxDecoration(
+                //   color: Colors.black12,
+                //   shape: BoxShape.circle
+                // ),
+                todayDecoration: BoxDecoration(
+                    color: Colors.black12, shape: BoxShape.circle)),
             calendarBuilders: CalendarBuilders(
               markerBuilder: (context, date, events) {
                 String dateKey = _getDateKey(date);
@@ -213,7 +209,8 @@ class CalendarScreenState extends State<CalendarScreen> {
                 // 식단 로그 체크 표시 (초록색 체크 아이콘)
                 if (_dietLogsByDate.containsKey(dateKey)) {
                   final mealLogs = _dietLogsByDate[dateKey]!;
-                  bool hasDietLog = mealLogs.any((meal) => meal.foods.isNotEmpty);
+                  bool hasDietLog =
+                      mealLogs.any((meal) => meal.foods.isNotEmpty);
                   if (hasDietLog) {
                     indicators.add(
                       FaIcon(
@@ -253,7 +250,7 @@ class CalendarScreenState extends State<CalendarScreen> {
                   return Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey,width: 2),
+                      border: Border.all(color: Colors.grey, width: 2),
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -300,43 +297,46 @@ class CalendarScreenState extends State<CalendarScreen> {
                       Expanded(
                         child: _selectedDayExerciseLogs.isNotEmpty
                             ? ListView.builder(
-                          itemCount: _selectedDayExerciseLogs.length,
-                          itemBuilder: (context, logIndex) {
-                            final log = _selectedDayExerciseLogs[logIndex];
-                            return ExpansionTile(
-                              title: Text(
-                                // 'Log1' 대신 저장된 시간을 표시
-                                DateFormat('HH:mm').format(log.timestamp),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                ),
-                              ),
-                              children: log.exercises.map((exercise) {
-                                return ListTile(
-                                  title: Text(
-                                    exercise.name,
-                                    style: const TextStyle(
-                                      decoration: TextDecoration.underline,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => ExerciseLogDetailScreen(
-                                          exercise: exercise,
-                                        ),
+                                itemCount: _selectedDayExerciseLogs.length,
+                                itemBuilder: (context, logIndex) {
+                                  final log =
+                                      _selectedDayExerciseLogs[logIndex];
+                                  return ExpansionTile(
+                                    title: Text(
+                                      // 'Log1' 대신 저장된 시간을 표시
+                                      DateFormat('HH:mm').format(log.timestamp),
+                                      style: const TextStyle(
+                                        fontSize: 16,
                                       ),
-                                    );
-                                  },
-                                );
-                              }).toList(),
-                            );
-                          },
-                        )
+                                    ),
+                                    children: log.exercises.map((exercise) {
+                                      return ListTile(
+                                        title: Text(
+                                          exercise.name,
+                                          style: const TextStyle(
+                                            decoration:
+                                                TextDecoration.underline,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ExerciseLogDetailScreen(
+                                                exercise: exercise,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    }).toList(),
+                                  );
+                                },
+                              )
                             : const Center(
-                          child: Text('No workout logs for this day'),
-                        ),
+                                child: Text('No workout logs for this day'),
+                              ),
                       ),
                     ],
                   ),
@@ -357,18 +357,19 @@ class CalendarScreenState extends State<CalendarScreen> {
                         ),
                       ),
                       Expanded(
-                        child: _selectedDayDietLog != null && _selectedDayDietLog!.isNotEmpty
+                        child: _selectedDayDietLog != null &&
+                                _selectedDayDietLog!.isNotEmpty
                             ? _buildDietLogSections()
                             : Center(
-                          child: ElevatedButton(
-                            onPressed: _navigateToDietLogScreen,
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: Colors.black,
-                            ),
-                            child: const Text('Add/Edit Diet'),
-                          ),
-                        ),
+                                child: ElevatedButton(
+                                  onPressed: _navigateToDietLogScreen,
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: Colors.black,
+                                  ),
+                                  child: const Text('Add/Edit Diet'),
+                                ),
+                              ),
                       ),
                     ],
                   ),
@@ -405,10 +406,10 @@ class CalendarScreenState extends State<CalendarScreen> {
                       index == 0
                           ? 'Meal 1'
                           : index == 1
-                          ? 'Meal 2'
-                          : index == 2
-                          ? 'Meal 3'
-                          : 'Meal ${index + 1}',
+                              ? 'Meal 2'
+                              : index == 2
+                                  ? 'Meal 3'
+                                  : 'Meal ${index + 1}',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -424,45 +425,45 @@ class CalendarScreenState extends State<CalendarScreen> {
                 // Foods list
                 mealLog.foods.isNotEmpty
                     ? Column(
-                  children: mealLog.foods.map((consumed) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Food name
-                          Text(
-                            consumed.name,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              decoration: TextDecoration.underline,
+                        children: mealLog.foods.map((consumed) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Food name
+                                Text(
+                                  consumed.name,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                // Nutrient information
+                                Text(
+                                  'Amount: ${consumed.quantity.toStringAsFixed(1)}g\n'
+                                  'Carbs: ${consumed.carbs.toStringAsFixed(1)}g\n'
+                                  'Protein: ${consumed.protein.toStringAsFixed(1)}g\n'
+                                  'Fat: ${consumed.fat.toStringAsFixed(1)}g',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          // Nutrient information
-                          Text(
-                            'Amount: ${consumed.quantity.toStringAsFixed(1)}g\n'
-                                'Carbs: ${consumed.carbs.toStringAsFixed(1)}g\n'
-                                'Protein: ${consumed.protein.toStringAsFixed(1)}g\n'
-                                'Fat: ${consumed.fat.toStringAsFixed(1)}g',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                )
+                          );
+                        }).toList(),
+                      )
                     : const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4.0),
-                  child: Text(
-                    'No foods added.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ),
+                        padding: EdgeInsets.symmetric(vertical: 4.0),
+                        child: Text(
+                          'No foods added.',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ),
               ],
             ),
           ),

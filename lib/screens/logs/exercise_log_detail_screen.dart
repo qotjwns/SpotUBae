@@ -21,24 +21,21 @@ class ExerciseLogDetailScreenState extends State<ExerciseLogDetailScreen> {
   bool _isFeedbackExpanded = false; // 피드백 확장 상태
   bool _isSetDataMissing = false; // 세트 수와 무게가 없는지 확인하는 플래그
   String _feedbackError = ''; // 피드백 오류 메시지 저장
-
+  //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_isFeedbackFetched) {
-      _checkMissingSetData(); // 세트 수와 무게가 없는지 확인
-      if (!_isSetDataMissing) { // 세트 수와 무게가 모두 있는 경우에만 피드백 요청
+      _checkMissingSetData();
+      if (!_isSetDataMissing) {
         _fetchChatBotFeedback();
       }
       _isFeedbackFetched = true;
     }
   }
 
-  // 세트 데이터 체크 메서드
   void _checkMissingSetData() {
     bool hasMissingSetData = false;
-
-    // 세트 수와 무게가 누락된 경우 체크
     for (var set in widget.exercise.sets) {
       if (set['weight'] == null || set['reps'] == null) {
         hasMissingSetData = true;
@@ -47,30 +44,31 @@ class ExerciseLogDetailScreenState extends State<ExerciseLogDetailScreen> {
     }
 
     setState(() {
-      _isSetDataMissing = hasMissingSetData; // 세트 데이터가 없으면 true
+      _isSetDataMissing = hasMissingSetData;
       _feedbackError = _isSetDataMissing
           ? 'Please enter both the number of sets and the weight.'
-          : ''; // 세트 수와 무게가 없으면 에러 메시지
+          : '';
     });
   }
 
   // 챗봇 피드백 요청 메서드
   Future<void> _fetchChatBotFeedback() async {
     if (_isSetDataMissing) {
-      return; // 세트 수와 무게가 없으면 피드백 요청을 하지 않음
+      return;
     }
 
     setState(() {
       _isLoading = true;
-      _feedbackError = ''; // 에러 메시지 초기화
+      _feedbackError = '';
     });
 
-    final userDataService = Provider.of<UserDataService>(context, listen: false);
+    final userDataService =
+        Provider.of<UserDataService>(context, listen: false);
 
-    // 사용자의 프로필 데이터가 없으면 에러 메시지 표시
     if (userDataService.profileUserDataList.isEmpty) {
       setState(() {
-        _feedbackError = 'Please enter your weight and body fat percentage in the profile screen.';
+        _feedbackError =
+            'Please enter your weight and body fat percentage in the profile screen.';
         _isLoading = false;
       });
       return;
@@ -80,11 +78,11 @@ class ExerciseLogDetailScreenState extends State<ExerciseLogDetailScreen> {
     final weight = latestUserData.weight;
     final bodyFat = latestUserData.bodyFat;
 
-    // 운동 세트 정보 구성
     String exerciseDetails = '';
     for (int i = 0; i < widget.exercise.sets.length; i++) {
       final set = widget.exercise.sets[i];
-      exerciseDetails += 'Set ${i + 1}: ${set['weight']} kg x ${set['reps']} reps\n';
+      exerciseDetails +=
+          'Set ${i + 1}: ${set['weight']} kg x ${set['reps']} reps\n';
     }
 
     // 챗봇 요청을 위한 프롬프트 생성
@@ -114,22 +112,20 @@ Please provide feedback on how this exercise contributes to the user's goals and
       });
     } catch (e) {
       setState(() {
-        _feedbackError = 'An error occurred while communicating with the ChatBot: $e';
+        _feedbackError = 'Please check your internet connection.';
         _isLoading = false;
       });
     }
-  }
+  } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
-  /// 피드백 요약 메서드
   String _summarizeFeedback(String feedback) {
     final lines = feedback.split('\n');
     if (lines.length > 5) {
-      return '${lines.take(5).join('\n')}';
+      return lines.take(5).join('\n');
     }
     return feedback;
   }
 
-  /// 챗봇 피드백을 보여주는 위젯
   Widget _buildChatBotFeedback() {
     if (_isLoading) {
       // 로딩 중일 때
@@ -169,7 +165,6 @@ Please provide feedback on how this exercise contributes to the user's goals and
     }
 
     if (_feedbackError.isNotEmpty) {
-      // 에러 메시지가 있으면 오류 메시지 카드 표시
       return Padding(
         padding: const EdgeInsets.all(16.0),
         child: Card(
@@ -206,11 +201,9 @@ Please provide feedback on how this exercise contributes to the user's goals and
     }
 
     if (_chatBotFeedback.isEmpty) {
-      // 피드백이 없다면 빈 공간 반환
       return const SizedBox.shrink();
     }
 
-    // 피드백이 있으면 요약 및 확장 기능 제공
     String feedbackToDisplay = _isFeedbackExpanded
         ? _chatBotFeedback
         : _summarizeFeedback(_chatBotFeedback);
@@ -266,7 +259,6 @@ Please provide feedback on how this exercise contributes to the user's goals and
     );
   }
 
-  // 세트 수나 무게가 없으면 "No Feedback" 카드 표시
   Widget _buildNoFeedbackMessage() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -326,7 +318,8 @@ Please provide feedback on how this exercise contributes to the user's goals and
             final set = entry.value;
             return Card(
               elevation: 3,
-              margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+              margin:
+                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -361,13 +354,11 @@ Please provide feedback on how this exercise contributes to the user's goals and
                 ),
               ),
             );
-          }).toList(),
-
-          // 세트 수나 무게가 없으면 No Feedback 메시지 표시
-          if (_isSetDataMissing) _buildNoFeedbackMessage()
-          else // 피드백 표시
+          }),
+          if (_isSetDataMissing)
+            _buildNoFeedbackMessage()
+          else
             _buildChatBotFeedback(),
-
         ],
       ),
     );

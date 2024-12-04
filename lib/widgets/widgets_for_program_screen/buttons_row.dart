@@ -1,4 +1,3 @@
-// lib/widgets/buttons_row.dart
 
 import 'package:flutter/material.dart';
 import 'animated_elevated_button.dart';
@@ -18,8 +17,7 @@ class ButtonsRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        // Save and Calculate 버튼
-        AnimatedElevatedButton(
+                AnimatedElevatedButton(
           onPressed: onSave,
           style: ElevatedButton.styleFrom(
             foregroundColor: Colors.white,
@@ -27,8 +25,7 @@ class ButtonsRow extends StatelessWidget {
           ),
           child: const Text('Save and Calculate'),
         ),
-        // Reset 버튼
-        AnimatedElevatedButton(
+                AnimatedElevatedButton(
           onPressed: onReset,
           style: ElevatedButton.styleFrom(
             foregroundColor: Colors.white,

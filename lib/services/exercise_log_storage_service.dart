@@ -9,14 +9,13 @@ class ExerciseLogStorageService {
     final prefs = await SharedPreferences.getInstance();
     List<ExerciseLog> currentLogs = await loadAllExerciseLogs();
 
-    // 기존 로직을 제거하고 항상 새로운 로그를 추가
-    currentLogs.add(log);
+    currentLogs
+        .add(log); //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
     String jsonString =
-    json.encode(currentLogs.map((log) => log.toJson()).toList());
+        json.encode(currentLogs.map((log) => log.toJson()).toList());
     await prefs.setString(exerciseLogKey, jsonString);
   }
-
 
   Future<List<ExerciseLog>> loadAllExerciseLogs() async {
     final prefs = await SharedPreferences.getInstance();

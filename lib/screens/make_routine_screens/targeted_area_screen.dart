@@ -18,15 +18,15 @@ class TargetedAreaScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 100, // 기본 높이보다 크게 설정 (필요에 따라 조정)
-        centerTitle: true, // 제목을 중앙에 배치
+        toolbarHeight: 100,
+        centerTitle: true,
         title: const Padding(
-          padding: EdgeInsets.only(top: 20.0), // 제목을 아래로 내리기 위한 상단 패딩 (필요에 따라 조정)
+          padding: EdgeInsets.only(top: 20.0),
           child: Text(
             'Select Body part',
             style: TextStyle(
-              fontSize: 36, // 텍스트 크기 조정 (필요에 따라 조정)
-              fontWeight: FontWeight.bold, // 텍스트 두께 조정
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
@@ -48,19 +48,26 @@ class TargetedAreaScreen extends StatelessWidget {
                 const SizedBox(height: 30),
 
                 // 각 카드의 높이를 줄이기 위한 변경 사항 적용
-                _buildWorkoutCard(context, "CHEST", 'assets/images/chest.png', cardWidth),
+                _buildWorkoutCard(
+                    context, "CHEST", 'assets/images/chest.png', cardWidth),
                 const SizedBox(height: 24),
-                _buildWorkoutCard(context, "BACK", 'assets/images/back.png', cardWidth),
+                _buildWorkoutCard(
+                    context, "BACK", 'assets/images/back.png', cardWidth),
                 const SizedBox(height: 24),
-                _buildWorkoutCard(context, "SHOULDER", 'assets/images/shoulder.png', cardWidth),
+                _buildWorkoutCard(context, "SHOULDER",
+                    'assets/images/shoulder.png', cardWidth),
                 const SizedBox(height: 24),
-                _buildWorkoutCard(context, "LEGS", 'assets/images/legs.png', cardWidth),
+                _buildWorkoutCard(
+                    context, "LEGS", 'assets/images/legs.png', cardWidth),
                 const SizedBox(height: 24),
-                _buildWorkoutCard(context, "ARMS", 'assets/images/arms.png', cardWidth),
+                _buildWorkoutCard(
+                    context, "ARMS", 'assets/images/arms.png', cardWidth),
                 const SizedBox(height: 24),
-                _buildWorkoutCard(context, "ABS", 'assets/images/abs.png', cardWidth),
+                _buildWorkoutCard(
+                    context, "ABS", 'assets/images/abs.png', cardWidth),
                 const SizedBox(height: 24),
-                _buildWorkoutCard(context, "CARDIO", 'assets/images/cardio.png', cardWidth),
+                _buildWorkoutCard(
+                    context, "CARDIO", 'assets/images/cardio.png', cardWidth),
               ],
             ),
           ),
@@ -69,7 +76,8 @@ class TargetedAreaScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWorkoutCard(BuildContext context, String label, String imagePath, double width) {
+  Widget _buildWorkoutCard(
+      BuildContext context, String label, String imagePath, double width) {
     return GestureDetector(
       onTap: () => _navigateToChatBot(context, label),
       child: Card(
@@ -78,13 +86,13 @@ class TargetedAreaScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10), // 내부 패딩 축소
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
           child: Row(
             children: [
               Image.asset(
                 imagePath,
-                width: 24, // 이미지 너비 조절
-                height: 24, // 이미지 높이 조절
+                width: 24,
+                height: 24,
                 fit: BoxFit.contain,
               ),
               const SizedBox(width: 10),
@@ -92,12 +100,12 @@ class TargetedAreaScreen extends StatelessWidget {
                 child: Text(
                   label,
                   style: const TextStyle(
-                    fontSize: 18, // 텍스트 크기 축소
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios, size: 16), // 화살표 아이콘 크기 축소
+              const Icon(Icons.arrow_forward_ios, size: 16),
             ],
           ),
         ),

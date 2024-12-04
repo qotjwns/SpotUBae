@@ -1,5 +1,3 @@
-// lib/models/user_data.dart
-
 class UserData {
   final DateTime date;
   double weight;

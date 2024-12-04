@@ -2,6 +2,7 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:group_app/screens/chatbot/how_to_chatbot.dart';
 import '../../models/exercise.dart';
 import '../../screens/chatbot/chatbot_screen.dart';
 
@@ -40,7 +41,7 @@ class ExerciseCardState extends State<ExerciseCard> {
     setState(() {
       sets.add({'weight': 0, 'reps': 0});
     });
-    widget.onSetsUpdated(sets); // 세트가 추가될 때마다 업데이트
+    widget.onSetsUpdated(sets);
   }
 
   void _removeSet() {
@@ -48,7 +49,7 @@ class ExerciseCardState extends State<ExerciseCard> {
       setState(() {
         sets.removeLast();
       });
-      widget.onSetsUpdated(sets); // 세트가 삭제될 때마다 업데이트
+      widget.onSetsUpdated(sets);
     }
   }
 
@@ -74,7 +75,7 @@ class ExerciseCardState extends State<ExerciseCard> {
             },
             children: List<Widget>.generate(
               ((maxValue - minValue) ~/ interval) + 1,
-                  (index) => Center(child: Text('${minValue + index * interval}')),
+              (index) => Center(child: Text('${minValue + index * interval}')),
             ),
           ),
         );
@@ -82,7 +83,6 @@ class ExerciseCardState extends State<ExerciseCard> {
     );
   }
 
-  // 메모 편집 다이얼로그 표시 메서드
   Future<void> _editNotes() async {
     String updatedNotes = notes ?? '';
     await showDialog(
@@ -106,17 +106,23 @@ class ExerciseCardState extends State<ExerciseCard> {
               onPressed: () {
                 Navigator.of(context).pop(); // 취소
               },
-              child: const Text('Cancel',style: TextStyle(
-                color: Colors.black, // 제목 텍스트 색상 변경
-              ),),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.black,
+                ),
+              ),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // 저장
               },
-              child: const Text('Save',style: TextStyle(
-                color: Colors.black, // 제목 텍스트 색상 변경
-              ),),
+              child: const Text(
+                'Save',
+                style: TextStyle(
+                  color: Colors.black, // 제목 텍스트 색상 변경
+                ),
+              ),
             ),
           ],
         );
@@ -142,11 +148,9 @@ class ExerciseCardState extends State<ExerciseCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 드래그 핸들과 상단 행
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // 드래그 핸들과 텍스트를 감싸는 Expanded
                 Expanded(
                   child: Row(
                     children: [
@@ -155,7 +159,7 @@ class ExerciseCardState extends State<ExerciseCard> {
                           widget.exercise.name,
                           style: const TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold),
-                          overflow: TextOverflow.ellipsis, // 텍스트 오버플로우 처리
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -163,7 +167,7 @@ class ExerciseCardState extends State<ExerciseCard> {
                 ),
                 // 아이콘 버튼들
                 Row(
-                  mainAxisSize: MainAxisSize.min, // 최소 크기로 설정
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
                       icon: const Icon(
@@ -173,7 +177,7 @@ class ExerciseCardState extends State<ExerciseCard> {
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => ChatBotScreen(
+                            builder: (context) => HowToChatbot(
                                 workoutType: widget.exercise.name),
                           ),
                         );
@@ -190,37 +194,38 @@ class ExerciseCardState extends State<ExerciseCard> {
                 Expanded(
                   child: notes != null
                       ? GestureDetector(
-                    onTap: _editNotes, // 메모 수정
-                    child: Row(
-                      children: [
-                        const Icon(Icons.note, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            notes!,
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.black54),
-                            overflow: TextOverflow.ellipsis,
+                          onTap: _editNotes, // 메모 수정
+                          child: Row(
+                            children: [
+                              const Icon(Icons.note, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  notes!,
+                                  style: const TextStyle(
+                                      fontSize: 14, color: Colors.black54),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const Icon(Icons.edit,
+                                  color: Colors.blue, size: 16),
+                            ],
+                          ),
+                        )
+                      : GestureDetector(
+                          onTap: _editNotes, // 메모 추가
+                          child: Row(
+                            children: const [
+                              Icon(Icons.note_add, color: Colors.grey),
+                              SizedBox(width: 4),
+                              Text(
+                                'Add notes...',
+                                style:
+                                    TextStyle(fontSize: 14, color: Colors.blue),
+                              ),
+                            ],
                           ),
                         ),
-                        const Icon(Icons.edit, color: Colors.blue, size: 16),
-                      ],
-                    ),
-                  )
-                      : GestureDetector(
-                    onTap: _editNotes, // 메모 추가
-                    child: Row(
-                      children: const [
-                        Icon(Icons.note_add, color: Colors.grey),
-                        SizedBox(width: 4),
-                        Text(
-                          'Add notes...',
-                          style: TextStyle(
-                              fontSize: 14, color: Colors.blue),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -269,7 +274,7 @@ class ExerciseCardState extends State<ExerciseCard> {
                                 setState(() {
                                   sets[index]['weight'] = value;
                                 });
-                                widget.onSetsUpdated(sets); // 무게가 변경될 때마다 업데이트
+                                widget.onSetsUpdated(sets);
                               },
                             );
                           },

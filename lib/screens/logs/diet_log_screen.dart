@@ -1,17 +1,15 @@
-// lib/screens/logs/diet_log_screen.dart
-
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/message.dart';
 import '../../models/program_user_data.dart';
 import '../../services/api_service.dart';
-import '../../models/consumed_food.dart'; // ConsumedFood import
+import '../../models/consumed_food.dart';
 import '../../services/food_service.dart';
 import '../../widgets/widget_for_diet_log_screen/serving_size_dialog.dart';
 import 'package:provider/provider.dart';
 import '../program_screen/program_screen.dart';
-import 'meal_log.dart'; // MealLog import
+import 'meal_log.dart';
 import '../../services/user_data_service.dart';
 
 class DietLogScreen extends StatefulWidget {
@@ -24,8 +22,7 @@ class DietLogScreen extends StatefulWidget {
 }
 
 class DietLogScreenState extends State<DietLogScreen> {
-  // Change to Map<String, List<MealLog>> format
-  Map<String, List<MealLog>> _dietLogsByDate = {};
+  final Map<String, List<MealLog>> _dietLogsByDate = {};
   final FoodService _foodService = FoodService();
 
   List<MealLog> get _mealLogs {
@@ -40,7 +37,6 @@ class DietLogScreenState extends State<DietLogScreen> {
     return _dietLogsByDate[dateKey]!;
   }
 
-  // **Added: Variable to store ChatBot response**
   String _chatBotResponse = '';
   bool _isFeedbackExpanded = false; // Feedback expansion state
 
@@ -48,46 +44,37 @@ class DietLogScreenState extends State<DietLogScreen> {
   ProgramUserData? _currentProgramData;
   String? _currentProgramType; // Current program type
 
-  // 챗봇 피드백을 초기화하는 함수 (앱 실행 시 체크)
   void _initializeChatBotFeedback() async {
     final prefs = await SharedPreferences.getInstance();
-
-    // 앱 실행 시, 저장된 챗봇 피드백을 가져온다
-    final storedResponse = prefs.getString('chatBotResponse_${_getDateKey(widget.selectedDay)}');
-
-    // MealLog에 음식이 하나라도 있으면 피드백을 표시, 아니면 초기화
-    bool isAnyMealWithFood = _mealLogs.any((mealLog) => mealLog.foods.isNotEmpty);
+    final storedResponse =
+        prefs.getString('chatBotResponse_${_getDateKey(widget.selectedDay)}');
+    bool isAnyMealWithFood =
+        _mealLogs.any((mealLog) => mealLog.foods.isNotEmpty);
 
     if (isAnyMealWithFood) {
-      // 음식이 있다면 이전에 저장된 챗봇 피드백을 로드
       setState(() {
-        _chatBotResponse = storedResponse ?? '';  // 저장된 피드백을 불러오기
-        _isFeedbackExpanded = false;  // 피드백 닫기
+        _chatBotResponse = storedResponse ?? ''; // 저장된 피드백을 불러오기
+        _isFeedbackExpanded = false; // 피드백 닫기
       });
     } else {
-      // MealLog에 음식이 없으면 챗봇 피드백 초기화
       setState(() {
-        _chatBotResponse = '';  // 피드백 초기화
-        _isFeedbackExpanded = false;  // 피드백 닫기
+        _chatBotResponse = '';
+        _isFeedbackExpanded = false;
       });
-    }
+    } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
   }
 
   @override
   void initState() {
     super.initState();
-    _initializeChatBotFeedback();  // 앱 실행 시 챗봇 피드백 초기화
+    _initializeChatBotFeedback();
   }
 
-  /// Load program data
   Future<void> _loadProgramData() async {
-    final userDataService = Provider.of<UserDataService>(context, listen: false);
-    await userDataService.loadProgramUserData(); // Load program data
-
-    // Determine the currently active program type.
-    // Assuming either 'Bulking' or 'Cutting' is set.
+    final userDataService =
+        Provider.of<UserDataService>(context, listen: false);
+    await userDataService.loadProgramUserData();
     _currentProgramType = userDataService.currentProgramType;
-
     if (_currentProgramType == 'Bulking') {
       _currentProgramData = userDataService.bulkingProgramData;
     } else if (_currentProgramType == 'Cutting') {
@@ -95,19 +82,8 @@ class DietLogScreenState extends State<DietLogScreen> {
     } else {
       _currentProgramData = null;
     }
-
-    setState(() {}); // Update UI
-  }
-
-  /// Load ChatBot response
-  Future<void> _loadChatBotResponse() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? savedResponse = prefs.getString('chatBotResponse_${_getDateKey(widget.selectedDay)}');
-    if (savedResponse != null) {
-      setState(() {
-        _chatBotResponse = savedResponse;
-      });
-    }
+    setState(
+        () {}); // Update UI, //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
   }
 
   String _getDateKey(DateTime date) {
@@ -132,21 +108,23 @@ class DietLogScreenState extends State<DietLogScreen> {
   }
 
   Future<void> _requestChatBotFeedback() async {
-    bool isAnyMealWithFood = _mealLogs.any((mealLog) => mealLog.foods.isNotEmpty);
+    bool isAnyMealWithFood =
+        _mealLogs.any((mealLog) => mealLog.foods.isNotEmpty);
     if (!isAnyMealWithFood) {
-      // MealLog에 음식이 없으면 피드백을 요청하지 않음
       if (mounted) {
         setState(() {
-          _chatBotResponse = '';  // 피드백 초기화
+          _chatBotResponse = ''; // 피드백 초기화
         });
       }
       return;
     }
 
     // User Data 및 MealLog 정보를 사용해 챗봇 피드백 요청
-    final userDataService = Provider.of<UserDataService>(context, listen: false);
+    final userDataService =
+        Provider.of<UserDataService>(context, listen: false);
     if (userDataService.profileUserDataList.isEmpty) {
-      _showSnackBar('Please enter your weight and body fat in the Profile screen.');
+      _showSnackBar(
+          'Please enter your weight and body fat in the Profile screen.');
       return;
     }
 
@@ -158,14 +136,15 @@ class DietLogScreenState extends State<DietLogScreen> {
     String dietDescription = '';
     for (int i = 0; i < _mealLogs.length; i++) {
       final meal = _mealLogs[i];
-      if (meal.foods.isEmpty) continue;  // Skip empty meals
+      if (meal.foods.isEmpty) continue; // Skip empty meals
       dietDescription += 'Meal ${i + 1}:\n';
       for (var food in meal.foods) {
         dietDescription += '- ${food.name}: ${food.quantity}g\n';
       }
     }
 
-    String prompt = 'Please provide feedback on the following diet based on the information below:\n'
+    String prompt =
+        'Please provide feedback on the following diet based on the information below:\n'
         'Weight: $weight kg\n'
         'Body Fat: $bodyFat%\n'
         'Today\'s Diet:\n$dietDescription\n'
@@ -189,40 +168,12 @@ class DietLogScreenState extends State<DietLogScreen> {
         _isFeedbackExpanded = false;
       });
 
-      // 저장된 피드백을 SharedPreferences에 저장
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('chatBotResponse_${_getDateKey(widget.selectedDay)}', response);
+      await prefs.setString(
+          'chatBotResponse_${_getDateKey(widget.selectedDay)}', response);
     }
-  }
+  } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
-  /// Load diet logs
-  Future<void> _loadDietLogs() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? data = prefs.getString('dietLogs');
-    if (data != null) {
-      print('Loading dietLogs: $data'); // Debugging output
-      try {
-        Map<String, dynamic> jsonData = jsonDecode(data);
-        setState(() {
-          _dietLogsByDate = jsonData.map((date, meals) {
-            return MapEntry(
-              date,
-              List<MealLog>.from(
-                (meals as List<dynamic>).map((mealJson) => MealLog.fromJson(mealJson)),
-              ),
-            );
-          }).cast<String, List<MealLog>>();
-        });
-      } catch (e) {
-        debugPrint('Error decoding diet logs: $e');
-        setState(() {
-          _dietLogsByDate = {};
-        });
-      }
-    }
-  }
-
-  /// Add food to a specific meal
   Future<void> _addDiet(int mealIndex) async {
     final bool? isAdd = await showDialog<bool>(
       context: context,
@@ -240,14 +191,23 @@ class DietLogScreenState extends State<DietLogScreen> {
                     onPressed: () {
                       Navigator.of(dialogContext).pop(true); // Select 'Yes'
                     },
-                    child: const Text('Yes'),
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.black),
+                    child: const Text(
+                      'Yes',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.of(dialogContext).pop(false); // Select 'No'
                     },
-                    child: const Text('No'),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red[200]),
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.white),
+                    child: const Text(
+                      'No',
+                      style: TextStyle(color: Colors.black),
+                    ),
                   ),
                 ],
               ),
@@ -300,7 +260,8 @@ class DietLogScreenState extends State<DietLogScreen> {
 
                       if (searchQuery.isNotEmpty) {
                         try {
-                          final results = await _foodService.searchFoods(searchQuery);
+                          final results =
+                              await _foodService.searchFoods(searchQuery);
                           setState(() {
                             searchResults = results;
                           });
@@ -319,20 +280,22 @@ class DietLogScreenState extends State<DietLogScreen> {
                   child: searchResults.isEmpty
                       ? const Center(child: Text('No results found.'))
                       : ListView.builder(
-                    itemCount: searchResults.length,
-                    itemBuilder: (BuildContext listContext, int index) {
-                      final food = searchResults[index];
-                      return ListTile(
-                        leading: Image.network(food['photo']),
-                        title: Text(food['food_name']),
-                        onTap: () async {
-                          Navigator.pop(sheetContext); // Close BottomSheet
-                          final nutrients = await _foodService.getFoodNutrients(food['food_name']);
-                          _showQuantitySliderDialog(mealIndex, nutrients);
-                        },
-                      );
-                    },
-                  ),
+                          itemCount: searchResults.length,
+                          itemBuilder: (BuildContext listContext, int index) {
+                            final food = searchResults[index];
+                            return ListTile(
+                              leading: Image.network(food['photo']),
+                              title: Text(food['food_name']),
+                              onTap: () async {
+                                Navigator.pop(
+                                    sheetContext); // Close BottomSheet
+                                final nutrients = await _foodService
+                                    .getFoodNutrients(food['food_name']);
+                                _showQuantitySliderDialog(mealIndex, nutrients);
+                              },
+                            );
+                          },
+                        ),
                 ),
               ],
             );
@@ -342,7 +305,8 @@ class DietLogScreenState extends State<DietLogScreen> {
     );
   }
 
-  void _showQuantitySliderDialog(int mealIndex, Map<String, dynamic> food) async {
+  void _showQuantitySliderDialog(
+      int mealIndex, Map<String, dynamic> food) async {
     double servingSize = 1.0; // Default value
 
     final updatedServingSize = await showDialog<double>(
@@ -360,8 +324,10 @@ class DietLogScreenState extends State<DietLogScreen> {
     }
   }
 
-  void _addFoodToMeal(int mealIndex, Map<String, dynamic> food, double servingSize) {
-    final double servingWeightGrams = (food['serving_weight_grams'] as num).toDouble();
+  void _addFoodToMeal(
+      int mealIndex, Map<String, dynamic> food, double servingSize) {
+    final double servingWeightGrams =
+        (food['serving_weight_grams'] as num).toDouble();
     final double quantityInGrams = servingWeightGrams * servingSize;
 
     final consumedFood = ConsumedFood(
@@ -372,7 +338,8 @@ class DietLogScreenState extends State<DietLogScreen> {
       carbs: (food['carbs'] as num).toDouble() * servingSize,
       protein: (food['protein'] as num).toDouble() * servingSize,
       fat: (food['fat'] as num).toDouble() * servingSize,
-      quantity: quantityInGrams, // Store in grams
+      quantity: quantityInGrams,
+      // Store in grams
       servingWeightGrams: servingWeightGrams, // Store serving size
     );
 
@@ -381,7 +348,6 @@ class DietLogScreenState extends State<DietLogScreen> {
     });
   }
 
-  /// Delete food from diet log
   void _removeFoodFromDietLog(int mealIndex, int foodIndex) {
     setState(() {
       _mealLogs[mealIndex].foods.removeAt(foodIndex);
@@ -389,16 +355,16 @@ class DietLogScreenState extends State<DietLogScreen> {
       // Check if the meal is empty after removal
       if (_mealLogs[mealIndex].foods.isEmpty) {
         // If all food items are removed from the meal, we don't request feedback
-        _chatBotResponse = '';  // Reset the feedback if the meal is empty
+        _chatBotResponse = ''; // Reset the feedback if the meal is empty
         _isFeedbackExpanded = false;
       }
     });
   }
 
-  /// Edit food in diet log
   void _editFoodInDietLog(int mealIndex, int foodIndex) async {
     final consumedFood = _mealLogs[mealIndex].foods[foodIndex];
-    double servingSize = consumedFood.quantity / consumedFood.servingWeightGrams;
+    double servingSize =
+        consumedFood.quantity / consumedFood.servingWeightGrams;
 
     // Clamp servingSize to stay within slider range
     servingSize = servingSize.clamp(0.5, 3.0).toDouble();
@@ -432,7 +398,6 @@ class DietLogScreenState extends State<DietLogScreen> {
     }
   }
 
-  /// Calculate total nutrients for the day
   Map<String, double> _calculateTotalNutrients() {
     double totalCarbs = 0.0;
     double totalProtein = 0.0;
@@ -453,14 +418,13 @@ class DietLogScreenState extends State<DietLogScreen> {
     };
   }
 
-  /// Show error dialog
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
       builder: (BuildContext errorContext) {
         return AlertDialog(
           title: const Text('Error'),
-          content: Text(message),
+          content: Text('Please check your internet connection'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(errorContext).pop(),
@@ -472,14 +436,12 @@ class DietLogScreenState extends State<DietLogScreen> {
     );
   }
 
-  /// Add a new meal
   void _addNewMeal() {
     setState(() {
       _mealLogs.add(MealLog());
     });
   }
 
-  /// Remove a meal
   void _removeMeal(int mealIndex) {
     setState(() {
       _mealLogs.removeAt(mealIndex);
@@ -513,15 +475,17 @@ class DietLogScreenState extends State<DietLogScreen> {
               const SizedBox(height: 8),
               _isFeedbackExpanded
                   ? Text(
-                _chatBotResponse,
-                style: const TextStyle(fontSize: 16, color: Colors.black87),
-              )
+                      _chatBotResponse,
+                      style:
+                          const TextStyle(fontSize: 16, color: Colors.black87),
+                    )
                   : Text(
-                _chatBotResponse,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 16, color: Colors.black87),
-              ),
+                      _chatBotResponse,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                          const TextStyle(fontSize: 16, color: Colors.black87),
+                    ),
               if (_chatBotResponse.split('\n').length > 3)
                 GestureDetector(
                   onTap: () {
@@ -619,100 +583,105 @@ class DietLogScreenState extends State<DietLogScreen> {
                         padding: const EdgeInsets.all(16.0),
                         child: _currentProgramData == null
                             ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'No Program Set',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            const Text(
-                              'Please add a Bulking or Cutting program to see your daily intake targets.',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                SizedBox(
-                                  width: 80, // Adjust button width
-                                  height: 40, // Adjust button height
-                                  child: ElevatedButton(
-                                    onPressed: () async {
-                                      // Navigate to Bulking program screen
-                                      await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ProgramScreen(programType: 'Bulking'),
-                                        ),
-                                      );
-                                      _loadProgramData();
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      textStyle: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'No Program Set',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    child: const Text('Bulk'),
                                   ),
-                                ),
-                                // Cutting button
-                                SizedBox(
-                                  width: 80, // Adjust button width
-                                  height: 40, // Adjust button height
-                                  child: ElevatedButton(
-                                    onPressed: () async {
-                                      // Navigate to Cutting program screen
-                                      await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ProgramScreen(programType: 'Cutting'),
+                                  const SizedBox(height: 10),
+                                  const Text(
+                                    'Please add a Bulking or Cutting program to see your daily intake targets.',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      SizedBox(
+                                        width: 80, // Adjust button width
+                                        height: 40, // Adjust button height
+                                        child: ElevatedButton(
+                                          onPressed: () async {
+                                            // Navigate to Bulking program screen
+                                            await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ProgramScreen(
+                                                        programType: 'Bulking'),
+                                              ),
+                                            );
+                                            _loadProgramData();
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            textStyle: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          child: const Text('Bulk'),
                                         ),
-                                      );
-                                      _loadProgramData();
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      textStyle: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
                                       ),
-                                    ),
-                                    child: const Text('Cut'),
+                                      // Cutting button
+                                      SizedBox(
+                                        width: 80, // Adjust button width
+                                        height: 40, // Adjust button height
+                                        child: ElevatedButton(
+                                          onPressed: () async {
+                                            // Navigate to Cutting program screen
+                                            await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ProgramScreen(
+                                                        programType: 'Cutting'),
+                                              ),
+                                            );
+                                            _loadProgramData();
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            textStyle: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          child: const Text('Cut'),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        )
+                                ],
+                              )
                             : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${_currentProgramData!.programType} Program Targets',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${_currentProgramData!.programType} Program Targets',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'Carbs: ${_currentProgramData!.dailyCarbs.toStringAsFixed(1)}g',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  Text(
+                                    'Protein: ${_currentProgramData!.dailyProtein.toStringAsFixed(1)}g',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  Text(
+                                    'Fat: ${_currentProgramData!.dailyFat.toStringAsFixed(1)}g',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Carbs: ${_currentProgramData!.dailyCarbs.toStringAsFixed(1)}g',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            Text(
-                              'Protein: ${_currentProgramData!.dailyProtein.toStringAsFixed(1)}g',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            Text(
-                              'Fat: ${_currentProgramData!.dailyFat.toStringAsFixed(1)}g',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ],
-                        ),
                       ),
                     ),
                   ),
@@ -739,7 +708,8 @@ class DietLogScreenState extends State<DietLogScreen> {
                   );
                 },
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 8.0),
                   child: Card(
                     elevation: 2,
                     child: Column(
@@ -758,7 +728,6 @@ class DietLogScreenState extends State<DietLogScreen> {
                             onPressed: () => _addDiet(index),
                           ),
                         ),
-                        // Food list
                         if (mealLog.foods.isNotEmpty)
                           ListView.builder(
                             shrinkWrap: true,
@@ -776,24 +745,27 @@ class DietLogScreenState extends State<DietLogScreen> {
                                 ),
                                 subtitle: Text(
                                   'Amount: ${food.quantity.toStringAsFixed(1)}g\n'
-                                      'Carbs: ${food.carbs.toStringAsFixed(1)}g\n'
-                                      'Protein: ${food.protein.toStringAsFixed(1)}g\n'
-                                      'Fat: ${food.fat.toStringAsFixed(1)}g',
+                                  'Carbs: ${food.carbs.toStringAsFixed(1)}g\n'
+                                  'Protein: ${food.protein.toStringAsFixed(1)}g\n'
+                                  'Fat: ${food.fat.toStringAsFixed(1)}g',
                                   style: const TextStyle(color: Colors.grey),
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
-                                      icon: const Icon(Icons.edit, color: Colors.black),
+                                      icon: const Icon(Icons.edit,
+                                          color: Colors.black),
                                       onPressed: () {
                                         _editFoodInDietLog(index, foodIndex);
                                       },
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      icon: const Icon(Icons.delete,
+                                          color: Colors.red),
                                       onPressed: () {
-                                        _removeFoodFromDietLog(index, foodIndex);
+                                        _removeFoodFromDietLog(
+                                            index, foodIndex);
                                       },
                                     ),
                                   ],
@@ -814,7 +786,8 @@ class DietLogScreenState extends State<DietLogScreen> {
                   ),
                 ),
               );
-            }).toList(),
+            }),
+            //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
             // Add Meal button
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -828,7 +801,6 @@ class DietLogScreenState extends State<DietLogScreen> {
                 label: const Text('Add Meal'),
               ),
             ),
-            // **Added: Display ChatBot response (Feedback Card)**
             _buildChatBotResponse(),
           ],
         ),

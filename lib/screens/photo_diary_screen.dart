@@ -1,5 +1,3 @@
-// lib/screens/photo_diary_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/photo_service.dart';
@@ -25,8 +23,8 @@ class PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
   @override
   void initState() {
     super.initState();
-    _photoService = PhotoService(); // PhotoService 초기화
-    _loadPhotos(); // 저장된 사진 로드
+    _photoService = PhotoService();
+    _loadPhotos();
   }
 
   @override
@@ -40,7 +38,6 @@ class PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
       _photos.addAll(photos);
     });
   }
-
 
   Future<void> _savePhoto(String path) async {
     final newPhoto = Photo(
@@ -65,7 +62,6 @@ class PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
     });
   }
 
-
   Future<String> _saveImageToLocalDirectory(String imagePath) async {
     final directory = await getApplicationDocumentsDirectory();
     final fileName = path.basename(imagePath);
@@ -78,7 +74,7 @@ class PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(
       source: ImageSource.camera,
-      imageQuality: 80, // 이미지 품질 조정 (옵션)
+      imageQuality: 80,
     );
     if (pickedFile != null) {
       final shouldSave = await _showSaveDialog();
@@ -91,35 +87,23 @@ class PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
 
   Future<bool> _showSaveDialog() async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Save Photo'),
-        content: const Text('Would you like to save this photo?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Yes'),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Save Photo'),
+            content: const Text('Would you like to save this photo?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Yes'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('No'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('No'),
-          ),
-        ],
-      ),
-    ) ??
+        ) ??
         false;
-  }
-
-  void _showFullScreenImage(int index) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => FullScreenPhotoGallery(
-          photos: _photos,
-          initialIndex: index,
-        ),
-      ),
-    );
   }
 
   @override
@@ -147,7 +131,8 @@ class PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add_a_photo_outlined, color: Colors.black, size: 25),
+                        Icon(Icons.add_a_photo_outlined,
+                            color: Colors.black, size: 25),
                         Text("Add a Photo!")
                       ],
                     ),
@@ -163,19 +148,30 @@ class PhotoDiaryScreenState extends State<PhotoDiaryScreen> {
                 crossAxisCount: 3,
                 mainAxisSpacing: 8.0,
                 crossAxisSpacing: 8.0,
-                childAspectRatio: 0.75, // 날짜를 표시할 공간을 위해 비율 조정
+                childAspectRatio: 0.75,
               ),
               itemCount: _photos.length,
               itemBuilder: (context, index) {
                 final photo = _photos[index];
                 return GestureDetector(
-                  onTap: () => _showFullScreenImage(index),
+                  onTap: () => (int index) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FullScreenPhotoGallery(
+                          photos: _photos,
+                          initialIndex: index,
+                        ),
+                      ),
+                    );
+                  },
                   onLongPress: () async {
                     final shouldDelete = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
                         title: const Text('Delete Photo'),
-                        content: const Text('Are you sure you want to delete this photo?'),
+                        content: const Text(
+                            'Are you sure you want to delete this photo?'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(false),

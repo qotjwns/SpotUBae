@@ -1,5 +1,3 @@
-// lib/models/photo.dart
-
 class Photo {
   final String path;
   final DateTime date;
@@ -17,7 +15,7 @@ class Photo {
   }
 
   Map<String, dynamic> toJson() => {
-    'path': path,
-    'date': date.toIso8601String(),
-  };
+        'path': path,
+        'date': date.toIso8601String(),
+      };
 }

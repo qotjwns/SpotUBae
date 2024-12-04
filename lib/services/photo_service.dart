@@ -1,5 +1,3 @@
-// lib/services/photo_service.dart
-
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/photo.dart';
@@ -13,7 +11,7 @@ class PhotoService {
     return savedPhotos
         .map((photo) => Photo.fromJson(jsonDecode(photo) as Map<String, dynamic>))
         .toList()
-      ..sort((a, b) => b.date.compareTo(a.date)); // 최신 날짜 순 정렬
+      ..sort((a, b) => b.date.compareTo(a.date));
   }
 
   Future<void> savePhotos(List<Photo> photos) async {
@@ -24,7 +22,7 @@ class PhotoService {
 
   Future<void> addPhoto(Photo photo) async {
     final photos = await loadPhotos();
-    photos.insert(0, photo); // 새로운 사진을 리스트의 시작 부분에 추가
+    photos.insert(0, photo);
     await savePhotos(photos);
   }
 
@@ -36,3 +34,4 @@ class PhotoService {
     }
   }
 }
+//OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com

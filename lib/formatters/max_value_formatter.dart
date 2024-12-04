@@ -1,5 +1,3 @@
-// lib/formatters/max_value_formatter.dart
-
 import 'package:flutter/services.dart';
 
 class MaxValueInputFormatter extends TextInputFormatter {
@@ -20,7 +18,6 @@ class MaxValueInputFormatter extends TextInputFormatter {
         return oldValue;
       }
     } catch (e) {
-      // 파싱 에러 시, 입력을 거부
       return oldValue;
     }
 

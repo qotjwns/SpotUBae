@@ -1,5 +1,3 @@
-// workout_selection_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:group_app/screens/make_routine_screens/make_my_routine_screen.dart';
 import 'package:provider/provider.dart';
@@ -33,7 +31,7 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
   Set<String> selectedWorkouts = {};
   String _selectedCategory = "recommendation";
 
-  Map<String, List<String>> _categoryWorkouts = {};
+  final Map<String, List<String>> _categoryWorkouts = {};
   Set<String> _bookmarkedWorkouts = {};
 
   bool _isInit = false; // To check if initialization has been done
@@ -55,7 +53,8 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
         // Bookmarks are managed separately
         continue;
       }
-      List<String> workouts = await _storageService.loadExercisesFromDownload(category);
+      List<String> workouts =
+          await _storageService.loadExercisesFromDownload(category);
       _categoryWorkouts[category] = workouts;
       print("Loaded workouts for $category: $workouts"); // Debugging
     }
@@ -81,13 +80,16 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
     } else {
       workoutsToFilter = _categoryWorkouts[_selectedCategory] ?? [];
     }
-    print("Category: $_selectedCategory, Workouts: $workoutsToFilter"); // Debugging
+    print(
+        "Category: $_selectedCategory, Workouts: $workoutsToFilter"); // Debugging
 
     if (query.isNotEmpty) {
       workoutsToFilter = workoutsToFilter
-          .where((workout) => workout.toLowerCase().contains(query.toLowerCase()))
+          .where(
+              (workout) => workout.toLowerCase().contains(query.toLowerCase()))
           .toList();
-      print("Filtered Workouts with query '$query': $workoutsToFilter"); // Debugging
+      print(
+          "Filtered Workouts with query '$query': $workoutsToFilter"); // Debugging
     }
 
     setState(() {
@@ -105,13 +107,12 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
   void _navigateToMakeMyRoutineScreen() {
     List<Exercise> selectedExercises = selectedWorkouts.map((workoutName) {
       return Exercise(
-        id: UniqueKey().toString(), // 고유 ID 생성
+        id: UniqueKey().toString(),
         name: workoutName,
         sets: [],
-        notes: null, // 메모 초기화
+        notes: null,
       );
     }).toList();
-
 
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -134,7 +135,6 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
     print("Updated bookmarks: $_bookmarkedWorkouts"); // Debugging
   }
 
-  // Method to reset "recommendation"
   void _resetRecommendation() async {
     bool confirm = await _showConfirmationDialog(
       context,
@@ -151,10 +151,12 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
         // "Pull Up",
         // "Squat",
       ];
-      await _storageService.setExercisesToDownload(defaultRecommendations, "recommendation");
+      await _storageService.setExercisesToDownload(
+          defaultRecommendations, "recommendation");
       await _loadAllWorkouts(); // Reload workout list
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Recommendation exercise list has been reset.')),
+        const SnackBar(
+            content: Text('Recommendation exercise list has been reset.')),
       );
     }
   }
@@ -162,28 +164,28 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
   Future<bool> _showConfirmationDialog(
       BuildContext context, String title, String content) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(content),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Yes'),
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-            ),
-            TextButton(
-              child: const Text('No'),
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-            ),
-          ],
-        );
-      },
-    ) ??
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(title),
+              content: Text(content),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Yes'),
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                ),
+                TextButton(
+                  child: const Text('No'),
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                ),
+              ],
+            );
+          },
+        ) ??
         false;
   }
 
@@ -236,9 +238,9 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
                     child: ChoiceChip(
                       label: category == "bookmarks"
                           ? Tooltip(
-                        message: "Bookmarks",
-                        child: Icon(Icons.bookmark),
-                      )
+                              message: "Bookmarks",
+                              child: Icon(Icons.bookmark),
+                            )
                           : Text(_capitalize(category)),
                       selected: _selectedCategory == category,
                       onSelected: (_) {
@@ -255,49 +257,51 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
           Expanded(
             child: _filteredWorkouts.isNotEmpty
                 ? ListView.builder(
-              itemCount: _filteredWorkouts.length,
-              itemBuilder: (context, index) {
-                final workout = _filteredWorkouts[index];
-                bool isBookmarked = _bookmarkedWorkouts.contains(workout);
-                bool isSelected = selectedWorkouts.contains(workout);
-                return ListTile(
-                  title: Text(workout),
-                  leading: Checkbox(
-                    value: isSelected,
-                    onChanged: (bool? selected) {
-                      setState(() {
-                        if (selected == true) {
-                          selectedWorkouts.add(workout);
-                        } else {
-                          selectedWorkouts.remove(workout);
-                        }
-                      });
+                    itemCount: _filteredWorkouts.length,
+                    itemBuilder: (context, index) {
+                      final workout = _filteredWorkouts[index];
+                      bool isBookmarked = _bookmarkedWorkouts.contains(workout);
+                      bool isSelected = selectedWorkouts.contains(workout);
+                      return ListTile(
+                        title: Text(workout),
+                        leading: Checkbox(
+                          value: isSelected,
+                          onChanged: (bool? selected) {
+                            setState(() {
+                              if (selected == true) {
+                                selectedWorkouts.add(workout);
+                              } else {
+                                selectedWorkouts.remove(workout);
+                              }
+                            });
+                          },
+                        ),
+                        trailing: IconButton(
+                          icon: Icon(
+                            isBookmarked
+                                ? Icons.bookmark
+                                : Icons.bookmark_border,
+                            color: isBookmarked ? Colors.black : null,
+                          ),
+                          onPressed: () {
+                            _toggleBookmark(workout);
+                          },
+                        ),
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              selectedWorkouts.remove(workout);
+                            } else {
+                              selectedWorkouts.add(workout);
+                            }
+                          });
+                        },
+                      );
                     },
-                  ),
-                  trailing: IconButton(
-                    icon: Icon(
-                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color: isBookmarked ? Colors.black : null,
-                    ),
-                    onPressed: () {
-                      _toggleBookmark(workout);
-                    },
-                  ),
-                  onTap: () {
-                    setState(() {
-                      if (isSelected) {
-                        selectedWorkouts.remove(workout);
-                      } else {
-                        selectedWorkouts.add(workout);
-                      }
-                    });
-                  },
-                );
-              },
-            )
+                  )
                 : const Center(
-              child: Text("No exercises found."),
-            ),
+                    child: Text("No exercises found."),
+                  ),
           ),
         ],
       ),

@@ -1,5 +1,3 @@
-// lib/widgets/serving_size_dialog.dart
-
 import 'package:flutter/material.dart';
 
 class ServingSizeDialog extends StatefulWidget {
@@ -50,23 +48,23 @@ class ServingSizeDialogState extends State<ServingSizeDialog> {
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.of(context).pop(); // 취소
+            Navigator.of(context).pop();
           },
           child: const Text(
             'Cancel',
             style: TextStyle(
-              color: Colors.black, // 제목 텍스트 색상 변경
+              color: Colors.black,
             ),
           ),
         ),
         TextButton(
           onPressed: () {
-            Navigator.of(context).pop(servingSize); // 수정된 servingSize 반환
+            Navigator.of(context).pop(servingSize);
           },
           child: const Text(
             'Update',
             style: TextStyle(
-              color: Colors.black, // 제목 텍스트 색상 변경
+              color: Colors.black,
             ),
           ),
         ),

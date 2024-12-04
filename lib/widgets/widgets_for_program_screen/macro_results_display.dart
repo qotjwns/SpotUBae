@@ -1,4 +1,3 @@
-// lib/widgets/macro_results_display.dart
 
 import 'package:flutter/material.dart';
 
@@ -24,37 +23,29 @@ class MacroResultsDisplay extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center, // Center elements within the card
-          children: [
+          crossAxisAlignment: CrossAxisAlignment.center,           children: [
             Text(
               'Daily Calorie Intake',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 20.0, // 텍스트 크기 조정
-                fontWeight: FontWeight.bold, // 텍스트 두께 조정
-              ),
-              textAlign: TextAlign.center, // Center the text
-            ),
+                fontSize: 20.0,                 fontWeight: FontWeight.bold,               ),
+              textAlign: TextAlign.center,             ),
             const SizedBox(height: 10),
             Text(
               'Calories: ${dailyCalories.toStringAsFixed(0)} kcal',
               style: const TextStyle(fontSize: 16.0),
-              textAlign: TextAlign.center, // Center the text
-            ),
+              textAlign: TextAlign.center,             ),
             Text(
               'Carbs: ${carbs.toStringAsFixed(1)} g',
               style: const TextStyle(fontSize: 16.0),
-              textAlign: TextAlign.center, // Center the text
-            ),
+              textAlign: TextAlign.center,             ),
             Text(
               'Protein: ${protein.toStringAsFixed(1)} g',
               style: const TextStyle(fontSize: 16.0),
-              textAlign: TextAlign.center, // Center the text
-            ),
+              textAlign: TextAlign.center,             ),
             Text(
               'Fat: ${fat.toStringAsFixed(1)} g',
               style: const TextStyle(fontSize: 16.0),
-              textAlign: TextAlign.center, // Center the text
-            ),
+              textAlign: TextAlign.center,             ),
           ],
         ),
       ),

@@ -9,7 +9,8 @@ import '../../services/exercise_log_storage_service.dart';
 import '../../widgets/widget_for_make_routine/exercise_card.dart';
 
 class MakeMyRoutineScreen extends StatefulWidget {
-  final List<Exercise>? initialExercises; // 초기 운동 리스트
+  final List<Exercise>?
+      initialExercises; //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
   const MakeMyRoutineScreen({super.key, this.initialExercises});
 
@@ -57,7 +58,6 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
     }
   }
 
-  // 운동 추가 메서드 수정: 이름을 매개변수로 받음
   void _addExercise(String name) {
     setState(() {
       _exercises.add(Exercise(
@@ -76,18 +76,13 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   }
 
   Future<void> _saveAllExercises() async {
-    print('Saving all exercises...');
     await _storageService.saveRoutine(_exercises);
-    print('Routine saved.');
-    await _saveExerciseLog(); // 운동 기록 저장
-    print('Exercise log saved.');
+    await _saveExerciseLog();
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('All exercises have been saved!')),
     );
-
-    // 홈 화면으로 이동
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
@@ -101,9 +96,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
       timestamp: timestamp,
       exercises: _exercises,
     );
-    print('Saving exercise log for $dateOnly...');
     await _logStorageService.saveExerciseLog(log);
-    print("Exercise log has been saved: ${log.toJson()}");
   }
 
   void _updateSets(int index, List<Map<String, int>> sets) {
@@ -118,21 +111,20 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
     });
   }
 
-  // 타이머 관련 메서드들
   void _startTimer() {
     setState(() {
       _isTimerRunning = true;
       _remainingTime = _timerDuration;
     });
     _countDown();
-  }
+  } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
   void _cancelTimer() {
     setState(() {
       _isTimerRunning = false;
       _remainingTime = _timerDuration;
     });
-  }
+  } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
   void _countDown() {
     Future.delayed(const Duration(seconds: 1), () {
@@ -148,11 +140,11 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
         _playSound();
       }
     });
-  }
+  } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
   Future<void> _playSound() async {
     await _audioPlayer.play(AssetSource('sounds/timer_end.mp3'));
-  }
+  } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
   void _showTimerPicker() {
     showModalBottomSheet(
@@ -171,11 +163,9 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
         ),
       ),
     );
-  }
+  } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
-  // 드래그 앤 드롭 순서 변경을 처리하는 메서드
   void _onReorder(int oldIndex, int newIndex) {
-    // "Add" 버튼은 마지막 인덱스이므로, 이를 포함하지 않도록 조건 설정
     if (oldIndex >= _exercises.length || newIndex > _exercises.length) return;
 
     setState(() {
@@ -198,7 +188,6 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
     });
   }
 
-  // 뒤로가기 버튼과 저장 버튼에서 동일한 AlertDialog를 표시하는 메서드
   Future<bool> _showExitConfirmationDialog() async {
     final result = await showDialog<String>(
       context: context,
@@ -211,7 +200,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
               foregroundColor: Colors.black,
             ),
             onPressed: () {
-              Navigator.of(context).pop('exit'); // 저장하지 않고 나가기
+              Navigator.of(context).pop('exit');
             },
             child: const Text('Exit without Saving'),
           ),
@@ -220,7 +209,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
               foregroundColor: Colors.black,
             ),
             onPressed: () {
-              Navigator.of(context).pop('save'); // 저장 후 나가기
+              Navigator.of(context).pop('save');
             },
             child: const Text('Save and Exit'),
           ),
@@ -239,17 +228,15 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
 
     if (result == 'save') {
       await _saveAllExercises();
-      return false; // _saveAllExercises가 이미 네비게이션을 처리하므로 추가 팝을 막음
+      return false;
     } else if (result == 'exit') {
-      // 저장하지 않고 나가기: 캘린더 저장 없이 홈 화면으로 이동
       Navigator.of(context).popUntil((route) => route.isFirst);
-      return false; // 추가 팝을 막음
+      return false;
     } else {
-      return false; // 취소, 네비게이션 막음
+      return false;
     }
   }
 
-  // 운동 이름을 입력받는 Dialog 표시 메서드
   Future<void> _showAddExerciseDialog() async {
     String exerciseName = '';
     await showDialog(
@@ -316,16 +303,10 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.save, size: 30),
-              onPressed: () async {
-                // 저장 버튼을 눌렀을 때 동일한 AlertDialog 표시
-                final result = await _showExitConfirmationDialog();
-                if (result) {
-                  // 사용자가 'Exit without Saving'을 선택한 경우 추가 동작이 필요하면 여기에 구현
-                  // 현재는 아무 작업도 하지 않음
-                }
-              },
-            ),
+                icon: const Icon(Icons.save, size: 30),
+                onPressed: () async {
+                  await _showExitConfirmationDialog();
+                }),
           ],
         ),
         body: Column(
