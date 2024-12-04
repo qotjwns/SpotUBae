@@ -1,17 +1,14 @@
-// widgets/widget_for_make_routine/exercise_card.dart
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:group_app/screens/chatbot/how_to_chatbot.dart';
 import '../../models/exercise.dart';
-import '../../screens/chatbot/chatbot_screen.dart';
 
 class ExerciseCard extends StatefulWidget {
   final Exercise exercise;
   final VoidCallback onDelete;
   final VoidCallback onSave;
-  final ValueChanged<List<Map<String, int>>> onSetsUpdated; // 세트 업데이트 콜백
-  final ValueChanged<String> onNotesUpdated; // 메모 업데이트 콜백 추가
+  final ValueChanged<List<Map<String, int>>> onSetsUpdated; //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
+  final ValueChanged<String> onNotesUpdated; //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
   const ExerciseCard({
     super.key,
@@ -19,7 +16,7 @@ class ExerciseCard extends StatefulWidget {
     required this.onDelete,
     required this.onSetsUpdated,
     required this.onSave,
-    required this.onNotesUpdated, // 메모 업데이트 콜백 전달
+    required this.onNotesUpdated, //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
   });
 
   @override
@@ -305,7 +302,7 @@ class ExerciseCardState extends State<ExerciseCard> {
                                 setState(() {
                                   sets[index]['reps'] = value;
                                 });
-                                widget.onSetsUpdated(sets); // 횟수가 변경될 때마다 업데이트
+                                widget.onSetsUpdated(sets); //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
                               },
                             );
                           },
