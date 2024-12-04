@@ -1,13 +1,12 @@
 class ProgramUserData {
-  final int age;
-  final String gender;
+  int age;
+  String gender;
   double currentWeight;
-  final double height;
+  double height;
   double currentBodyFat;
-  final double goalWeight;
-  final double goalBodyFat;
-  String
-      programType; // final 제거하여 mutable로 변경, OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
+  double goalWeight;
+  double goalBodyFat;
+  String programType; // final 제거하여 mutable로 변경, OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
   double dailyCarbs;
   double dailyProtein;
   double dailyFat;
@@ -26,27 +25,6 @@ class ProgramUserData {
     required this.dailyFat,
   });
 
-  factory ProgramUserData.fromMap(Map<String, dynamic> map) {
-    return ProgramUserData(
-      age: map['age'] ?? 25,
-      gender: map['gender'] ?? 'male',
-      currentWeight: (map['currentWeight'] as num).toDouble(),
-      height: (map['height'] as num).toDouble(),
-      currentBodyFat: (map['currentBodyFat'] as num).toDouble(),
-      goalWeight: (map['goalWeight'] as num).toDouble(),
-      goalBodyFat: (map['goalBodyFat'] as num).toDouble(),
-      programType: map['programType'] ?? 'Bulking',
-      dailyCarbs: map['dailyCarbs'] != null
-          ? (map['dailyCarbs'] as num).toDouble()
-          : 0.0,
-      dailyProtein: map['dailyProtein'] != null
-          ? (map['dailyProtein'] as num).toDouble()
-          : 0.0,
-      dailyFat:
-          map['dailyFat'] != null ? (map['dailyFat'] as num).toDouble() : 0.0,
-    );
-  }
-
   Map<String, dynamic> toMap() {
     return {
       'age': age,
@@ -61,5 +39,21 @@ class ProgramUserData {
       'dailyProtein': dailyProtein,
       'dailyFat': dailyFat,
     };
+  }
+
+  factory ProgramUserData.fromMap(Map<String, dynamic> map) {
+    return ProgramUserData(
+      age: map['age'],
+      gender: map['gender'],
+      currentWeight: map['currentWeight'],
+      height: map['height'],
+      currentBodyFat: map['currentBodyFat'],
+      goalWeight: map['goalWeight'],
+      goalBodyFat: map['goalBodyFat'],
+      programType: map['programType'],
+      dailyCarbs: map['dailyCarbs'],
+      dailyProtein: map['dailyProtein'],
+      dailyFat: map['dailyFat'],
+    );
   }
 }

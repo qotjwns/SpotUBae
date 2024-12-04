@@ -12,16 +12,19 @@ Future<void> main() async {
   await storageService.initializeWorkouts();
 
 
-  final userDataService =UserDataService();
-  userDataService.loadProgramUserData();
-  userDataService.loadProfileUserData();
+  // UserDataService 초기화 및 데이터 로드
+  final userDataService = UserDataService();
+  await userDataService.loadProgramUserData();
+  await userDataService.loadProfileUserData();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => GoalManageService()),
-        ChangeNotifierProvider(create: (_) => UserDataService()),
-        ChangeNotifierProvider(create: (context) => UserDataService()..loadProfileUserData()),
+        // Provide the single instance of UserDataService
+        ChangeNotifierProvider<UserDataService>.value(
+          value: userDataService,
+        ),
         Provider<StorageService>(create: (_) => storageService), // StorageService를 Provider로 등록
         Provider<ApiService>(
           create: (_) => ApiService(

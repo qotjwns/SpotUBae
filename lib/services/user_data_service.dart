@@ -64,6 +64,8 @@ class UserDataService with ChangeNotifier {
     required String programType, // 'Bulking' 또는 'Cutting'
     double? currentWeight,
     double? currentBodyFat,
+    double? goalWeight,
+    double? goalBodyFat,
   }) async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -74,9 +76,15 @@ class UserDataService with ChangeNotifier {
       if (currentBodyFat != null) {
         _bulkingProgramData!.currentBodyFat = currentBodyFat;
       }
-      final String bulkingDataString =
-          json.encode(_bulkingProgramData!.toMap());
+      if (goalWeight != null) {
+        _bulkingProgramData!.goalWeight = goalWeight;
+      }
+      if (goalBodyFat != null) {
+        _bulkingProgramData!.goalBodyFat = goalBodyFat;
+      }
+      final String bulkingDataString = json.encode(_bulkingProgramData!.toMap());
       await prefs.setString('bulkingProgramData', bulkingDataString);
+      print("Bulking Program Data Updated: ${_bulkingProgramData!.toMap()}");
     } else if (programType == 'Cutting' && _cuttingProgramData != null) {
       if (currentWeight != null) {
         _cuttingProgramData!.currentWeight = currentWeight;
@@ -84,15 +92,23 @@ class UserDataService with ChangeNotifier {
       if (currentBodyFat != null) {
         _cuttingProgramData!.currentBodyFat = currentBodyFat;
       }
-      final String cuttingDataString =
-          json.encode(_cuttingProgramData!.toMap());
+      if (goalWeight != null) {
+        _cuttingProgramData!.goalWeight = goalWeight;
+      }
+      if (goalBodyFat != null) {
+        _cuttingProgramData!.goalBodyFat = goalBodyFat;
+      }
+      final String cuttingDataString = json.encode(_cuttingProgramData!.toMap());
       await prefs.setString('cuttingProgramData', cuttingDataString);
+      print("Cutting Program Data Updated: ${_cuttingProgramData!.toMap()}");
     } else {
+      print("No existing program data found for type: $programType");
       return;
     }
 
     notifyListeners();
   }
+
 
   Future<void> loadProfileUserData() async {
     final prefs = await SharedPreferences.getInstance();
