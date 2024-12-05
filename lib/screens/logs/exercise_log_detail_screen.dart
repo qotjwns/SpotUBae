@@ -36,17 +36,26 @@ class ExerciseLogDetailScreenState extends State<ExerciseLogDetailScreen> {
 
   void _checkMissingSetData() {
     bool hasMissingSetData = false;
-    for (var set in widget.exercise.sets) {
-      if (set['weight'] == null || set['reps'] == null) {
-        hasMissingSetData = true;
-        break;
+    if (widget.exercise.isCardio) {
+      for (var set in widget.exercise.sets) {
+        if (set['workoutTime'] == null || set['breakTime'] == null) {
+          hasMissingSetData = true;
+          break;
+        }
+      }
+    } else {
+      for (var set in widget.exercise.sets) {
+        if (set['weight'] == null || set['reps'] == null || set['breakTime'] == null) {
+          hasMissingSetData = true;
+          break;
+        }
       }
     }
 
     setState(() {
       _isSetDataMissing = hasMissingSetData;
       _feedbackError = _isSetDataMissing
-          ? 'Please enter both the number of sets and the weight.'
+          ? 'Please enter the required data for each set.'
           : '';
     });
   }
@@ -63,12 +72,12 @@ class ExerciseLogDetailScreenState extends State<ExerciseLogDetailScreen> {
     });
 
     final userDataService =
-        Provider.of<UserDataService>(context, listen: false);
+    Provider.of<UserDataService>(context, listen: false);
 
     if (userDataService.profileUserDataList.isEmpty) {
       setState(() {
         _feedbackError =
-            'Please enter your weight and body fat percentage in the profile screen.';
+        'Please enter your weight and body fat percentage in the profile screen.';
         _isLoading = false;
       });
       return;
@@ -81,8 +90,13 @@ class ExerciseLogDetailScreenState extends State<ExerciseLogDetailScreen> {
     String exerciseDetails = '';
     for (int i = 0; i < widget.exercise.sets.length; i++) {
       final set = widget.exercise.sets[i];
-      exerciseDetails +=
-          'Set ${i + 1}: ${set['weight']} kg x ${set['reps']} reps\n';
+      if (widget.exercise.isCardio) {
+        exerciseDetails +=
+        'Set ${i + 1}: ${set['workoutTime']} min x Break Time: ${set['breakTime']} min\n';
+      } else {
+        exerciseDetails +=
+        'Set ${i + 1}: ${set['weight']} kg x ${set['reps']} reps x Break Time: ${set['breakTime']} min\n';
+      }
     }
 
     // 챗봇 요청을 위한 프롬프트 생성
@@ -116,12 +130,12 @@ Please provide feedback on how this exercise contributes to the user's goals and
         _isLoading = false;
       });
     }
-  } //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
+  }
 
   String _summarizeFeedback(String feedback) {
     final lines = feedback.split('\n');
     if (lines.length > 5) {
-      return lines.take(5).join('\n');
+      return lines.take(5).join('\n') + '...';
     }
     return feedback;
   }
@@ -272,7 +286,7 @@ Please provide feedback on how this exercise contributes to the user's goals and
           padding: const EdgeInsets.all(16.0),
           child: Text(
             _isSetDataMissing
-                ? 'Please set the number of sets and weight for the exercise before viewing feedback.'
+                ? 'Please set the required data for each set before viewing feedback.'
                 : 'Please enter your weight and body fat percentage in the profile screen.',
             style: const TextStyle(
               fontSize: 16,
@@ -319,7 +333,7 @@ Please provide feedback on how this exercise contributes to the user's goals and
             return Card(
               elevation: 3,
               margin:
-                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+              const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -341,12 +355,44 @@ Please provide feedback on how this exercise contributes to the user's goals and
                     fontSize: 18,
                   ),
                 ),
-                subtitle: Text(
-                  '${set['weight']} kg x ${set['reps']} reps',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
+                subtitle: widget.exercise.isCardio
+                    ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Workout Time: ${set['workoutTime']} min',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    Text(
+                      'Break Time: ${set['breakTime']} min',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                )
+                    : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${set['weight']} kg x ${set['reps']} reps',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    Text(
+                      'Break Time: ${set['breakTime']} min',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
                 ),
                 trailing: const Icon(
                   Icons.fitness_center,

@@ -1,3 +1,5 @@
+// widgets/widget_for_make_routine/exercise_card.dart
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:group_app/screens/chatbot/how_to_chatbot.dart';
@@ -7,8 +9,10 @@ class ExerciseCard extends StatefulWidget {
   final Exercise exercise;
   final VoidCallback onDelete;
   final VoidCallback onSave;
-  final ValueChanged<List<Map<String, int>>> onSetsUpdated; //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
-  final ValueChanged<String> onNotesUpdated; //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
+  final ValueChanged<List<Map<String, dynamic>>> onSetsUpdated; // 타입 수정
+  final ValueChanged<String?> onNotesUpdated; // Nullable로 수정
+  final bool isCardio;
+
 
   const ExerciseCard({
     super.key,
@@ -16,7 +20,8 @@ class ExerciseCard extends StatefulWidget {
     required this.onDelete,
     required this.onSetsUpdated,
     required this.onSave,
-    required this.onNotesUpdated, //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
+    required this.onNotesUpdated,
+    required this.isCardio,
   });
 
   @override
@@ -24,19 +29,23 @@ class ExerciseCard extends StatefulWidget {
 }
 
 class ExerciseCardState extends State<ExerciseCard> {
-  late List<Map<String, int>> sets;
+  late List<Map<String, dynamic>> sets;
   late String? notes; // 메모 상태 변수
 
   @override
   void initState() {
     super.initState();
-    sets = List<Map<String, int>>.from(widget.exercise.sets);
+    sets = List<Map<String, dynamic>>.from(widget.exercise.sets);
     notes = widget.exercise.notes;
   }
 
   void _addSet() {
     setState(() {
-      sets.add({'weight': 0, 'reps': 0});
+      if (widget.isCardio) {
+        sets.add({'workoutTime': 0, 'breakTime': 0});
+      } else {
+        sets.add({'weight': 0, 'reps': 0, 'breakTime': 0});
+      }
     });
     widget.onSetsUpdated(sets);
   }
@@ -72,7 +81,7 @@ class ExerciseCardState extends State<ExerciseCard> {
             },
             children: List<Widget>.generate(
               ((maxValue - minValue) ~/ interval) + 1,
-              (index) => Center(child: Text('${minValue + index * interval}')),
+                  (index) => Center(child: Text('${minValue + index * interval}')),
             ),
           ),
         );
@@ -117,7 +126,7 @@ class ExerciseCardState extends State<ExerciseCard> {
               child: const Text(
                 'Save',
                 style: TextStyle(
-                  color: Colors.black, // 제목 텍스트 색상 변경
+                  color: Colors.black, // 텍스트 색상 유지
                 ),
               ),
             ),
@@ -129,13 +138,13 @@ class ExerciseCardState extends State<ExerciseCard> {
     setState(() {
       notes = updatedNotes.trim().isEmpty ? null : updatedNotes.trim();
     });
-    widget.onNotesUpdated(notes ?? '');
+    widget.onNotesUpdated(notes);
   }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      key: ValueKey(widget.exercise.id), // 고유 ID 사용
+      key: ValueKey(widget.exercise.id),
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -145,6 +154,7 @@ class ExerciseCardState extends State<ExerciseCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 운동 이름 및 아이콘 버튼
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -179,6 +189,15 @@ class ExerciseCardState extends State<ExerciseCard> {
                           ),
                         );
                       },
+                      tooltip: 'How to perform this exercise',
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete,
+                        color: Colors.red,
+                      ),
+                      onPressed: widget.onDelete,
+                      tooltip: 'Delete Exercise',
                     ),
                   ],
                 ),
@@ -191,47 +210,49 @@ class ExerciseCardState extends State<ExerciseCard> {
                 Expanded(
                   child: notes != null
                       ? GestureDetector(
-                          onTap: _editNotes, // 메모 수정
-                          child: Row(
-                            children: [
-                              const Icon(Icons.note, color: Colors.grey),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  notes!,
-                                  style: const TextStyle(
-                                      fontSize: 14, color: Colors.black54),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const Icon(Icons.edit,
-                                  color: Colors.blue, size: 16),
-                            ],
-                          ),
-                        )
-                      : GestureDetector(
-                          onTap: _editNotes, // 메모 추가
-                          child: Row(
-                            children: const [
-                              Icon(Icons.note_add, color: Colors.grey),
-                              SizedBox(width: 4),
-                              Text(
-                                'Add notes...',
-                                style:
-                                    TextStyle(fontSize: 14, color: Colors.blue),
-                              ),
-                            ],
+                    onTap: _editNotes, // 메모 수정
+                    child: Row(
+                      children: [
+                        const Icon(Icons.note, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            notes!,
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.black54),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const Icon(Icons.edit,
+                            color: Colors.blue, size: 16),
+                      ],
+                    ),
+                  )
+                      : GestureDetector(
+                    onTap: _editNotes, // 메모 추가
+                    child: Row(
+                      children: const [
+                        Icon(Icons.note_add, color: Colors.grey),
+                        SizedBox(width: 4),
+                        Text(
+                          'Add notes...',
+                          style:
+                          TextStyle(fontSize: 14, color: Colors.blue),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
             const Divider(height: 20, thickness: 1),
+            // 세트 추가/삭제 및 세트 수 표시
             Row(
               children: [
                 IconButton(
                   icon: const Icon(Icons.remove_circle, color: Colors.black),
                   onPressed: _removeSet,
+                  tooltip: 'Remove Set',
                 ),
                 Text(
                   "Number of Sets: ${sets.length}",
@@ -240,9 +261,82 @@ class ExerciseCardState extends State<ExerciseCard> {
                 IconButton(
                   icon: const Icon(Icons.add_circle, color: Colors.black),
                   onPressed: _addSet,
+                  tooltip: 'Add Set',
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+            // 헤더 행 추가
+            if (sets.isNotEmpty) ...[
+              Card(
+                color: Colors.grey[200],
+                elevation: 0,
+                margin: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding:
+                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: Text(
+                          'Set',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      if (widget.isCardio) ...[
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'Workout Time',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'Break Time',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ] else ...[
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'Weight',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'Reps',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'Break Time',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
             // 세트 리스트
             Column(
               children: List.generate(sets.length, (index) {
@@ -251,74 +345,181 @@ class ExerciseCardState extends State<ExerciseCard> {
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                   child: Row(
                     children: [
-                      // 세트 번호 표시 추가
-                      Text(
-                        "Set ${index + 1}",
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 10),
+                      // 세트 번호 표시
                       Expanded(
-                        child: GestureDetector(
-                          onTap: () async {
-                            await _showPicker(
-                              context: context,
-                              initialValue: set['weight']!,
-                              minValue: 0,
-                              maxValue: 300,
-                              interval: 5,
-                              onSelected: (value) {
-                                setState(() {
-                                  sets[index]['weight'] = value;
-                                });
-                                widget.onSetsUpdated(sets);
-                              },
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(12.0),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '${set['weight']} kg',
-                              textAlign: TextAlign.center,
+                        flex: 1,
+                        child: Text(
+                          "Set ${index + 1}",
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      if (widget.isCardio) ...[
+                        // Cardio 운동: Workout Time
+                        Expanded(
+                          flex: 2,
+                          child: GestureDetector(
+                            onTap: () async {
+                              await _showPicker(
+                                context: context,
+                                initialValue: set['workoutTime'] ?? 0,
+                                minValue: 0,
+                                maxValue: 120, // 예: 최대 120분
+                                interval: 5,
+                                onSelected: (value) {
+                                  setState(() {
+                                    sets[index]['workoutTime'] = value;
+                                  });
+                                  widget.onSetsUpdated(sets);
+                                },
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12.0),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${set['workoutTime']} min',
+                                textAlign: TextAlign.center,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () async {
-                            await _showPicker(
-                              context: context,
-                              initialValue: set['reps']!,
-                              minValue: 0,
-                              maxValue: 30,
-                              interval: 1,
-                              onSelected: (value) {
-                                setState(() {
-                                  sets[index]['reps'] = value;
-                                });
-                                widget.onSetsUpdated(sets); //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
-                              },
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(12.0),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '${set['reps']} reps',
-                              textAlign: TextAlign.center,
+                        const SizedBox(width: 10),
+                        // Break Time
+                        Expanded(
+                          flex: 2,
+                          child: GestureDetector(
+                            onTap: () async {
+                              await _showPicker(
+                                context: context,
+                                initialValue: set['breakTime'] ?? 0,
+                                minValue: 0,
+                                maxValue: 60, // 예: 최대 60분
+                                interval: 1,
+                                onSelected: (value) {
+                                  setState(() {
+                                    sets[index]['breakTime'] = value;
+                                  });
+                                  widget.onSetsUpdated(sets);
+                                },
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12.0),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${set['breakTime']} min',
+                                textAlign: TextAlign.center,
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ] else ...[
+                        // 일반 운동: Weight 및 Reps
+                        Expanded(
+                          flex: 2,
+                          child: GestureDetector(
+                            onTap: () async {
+                              await _showPicker(
+                                context: context,
+                                initialValue: set['weight'] ?? 0,
+                                minValue: 0,
+                                maxValue: 300,
+                                interval: 5,
+                                onSelected: (value) {
+                                  setState(() {
+                                    sets[index]['weight'] = value;
+                                  });
+                                  widget.onSetsUpdated(sets);
+                                },
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12.0),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${set['weight']} kg',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: GestureDetector(
+                            onTap: () async {
+                              await _showPicker(
+                                context: context,
+                                initialValue: set['reps'] ?? 0,
+                                minValue: 0,
+                                maxValue: 30,
+                                interval: 1,
+                                onSelected: (value) {
+                                  setState(() {
+                                    sets[index]['reps'] = value;
+                                  });
+                                  widget.onSetsUpdated(sets);
+                                },
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12.0),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${set['reps']} reps',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        // Break Time
+                        Expanded(
+                          flex: 2,
+                          child: GestureDetector(
+                            onTap: () async {
+                              await _showPicker(
+                                context: context,
+                                initialValue: set['breakTime'] ?? 0,
+                                minValue: 0,
+                                maxValue: 60, // 예: 최대 60분
+                                interval: 1,
+                                onSelected: (value) {
+                                  setState(() {
+                                    sets[index]['breakTime'] = value;
+                                  });
+                                  widget.onSetsUpdated(sets);
+                                },
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12.0),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${set['breakTime']} min',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 );

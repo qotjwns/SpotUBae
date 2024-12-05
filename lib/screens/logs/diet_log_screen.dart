@@ -68,9 +68,12 @@ class DietLogScreenState extends State<DietLogScreen> {
   void initState() {
     super.initState();
     _initializeChatBotFeedback();
+    _loadProgramData();
   }
 
   Future<void> _loadProgramData() async {
+    await _foodService;
+
     final userDataService =
         Provider.of<UserDataService>(context, listen: false);
     await userDataService.loadProgramUserData();

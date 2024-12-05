@@ -28,6 +28,7 @@ class ExerciseLogStorageService {
     }
   }
 
+
   Future<List<ExerciseLog>> loadExerciseLogsByDate(DateTime date) async {
     List<ExerciseLog> allLogs = await loadAllExerciseLogs();
     return allLogs.where((log) => isSameDate(log.date, date)).toList();
