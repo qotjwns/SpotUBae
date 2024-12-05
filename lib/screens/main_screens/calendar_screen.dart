@@ -303,7 +303,6 @@ class CalendarScreenState extends State<CalendarScreen> {
                                       _selectedDayExerciseLogs[logIndex];
                                   return ExpansionTile(
                                     title: Text(
-                                      // 'Log1' 대신 저장된 시간을 표시
                                       DateFormat('HH:mm').format(log.timestamp),
                                       style: const TextStyle(
                                         fontSize: 16,
@@ -314,16 +313,14 @@ class CalendarScreenState extends State<CalendarScreen> {
                                         title: Text(
                                           exercise.name,
                                           style: const TextStyle(
-                                            decoration:
-                                                TextDecoration.underline,
+                                            decoration: TextDecoration.underline,
                                             fontSize: 16,
                                           ),
                                         ),
                                         onTap: () {
                                           Navigator.of(context).push(
                                             MaterialPageRoute(
-                                              builder: (context) =>
-                                                  ExerciseLogDetailScreen(
+                                              builder: (context) => ExerciseLogDetailScreen(
                                                 exercise: exercise,
                                               ),
                                             ),

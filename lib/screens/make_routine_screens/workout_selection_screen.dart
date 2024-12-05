@@ -106,11 +106,13 @@ class _WorkoutSelectionScreenState extends State<WorkoutSelectionScreen> {
 
   void _navigateToMakeMyRoutineScreen() {
     List<Exercise> selectedExercises = selectedWorkouts.map((workoutName) {
+      bool isCardio = _storageService.cardioWorkouts.contains(workoutName);
       return Exercise(
         id: UniqueKey().toString(),
         name: workoutName,
         sets: [],
         notes: null,
+        isCardio: isCardio, // isCardio 설정
       );
     }).toList();
 

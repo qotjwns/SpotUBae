@@ -10,7 +10,7 @@ import '../../widgets/widget_for_make_routine/exercise_card.dart';
 
 class MakeMyRoutineScreen extends StatefulWidget {
   final List<Exercise>?
-      initialExercises; //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
+  initialExercises; //OpenAi.(2024).ChatGPT(version 4o).https://chat.openai.com
 
   const MakeMyRoutineScreen({super.key, this.initialExercises});
 
@@ -22,12 +22,16 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   List<Exercise> _exercises = [];
   final RoutineStorageService _storageService = RoutineStorageService();
   final ExerciseLogStorageService _logStorageService =
-      ExerciseLogStorageService();
+  ExerciseLogStorageService();
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   Duration _timerDuration = const Duration(minutes: 1);
   bool _isTimerRunning = false;
   Duration _remainingTime = const Duration();
+
+  // 기본 시간 변수 추가
+  Duration _defaultWorkoutTime = const Duration(minutes: 5);
+  Duration _defaultBreakTime = const Duration(minutes: 1);
 
   @override
   void initState() {
@@ -36,8 +40,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
   }
 
   Future<void> _loadRoutine() async {
-    if (widget.initialExercises != null &&
-        widget.initialExercises!.isNotEmpty) {
+    if (widget.initialExercises != null && widget.initialExercises!.isNotEmpty) {
       setState(() {
         _exercises = List<Exercise>.from(widget.initialExercises!);
       });
@@ -50,13 +53,15 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
             name: "New Workout",
             sets: [],
             notes: null,
+            isCardio: _isCardioExercise("New Workout"),
           ));
         } else {
-          _exercises.addAll(loadedExercises);
+          _exercises = loadedExercises;
         }
       });
     }
   }
+
 
   void _addExercise(String name) {
     setState(() {
@@ -65,9 +70,11 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
         name: name,
         sets: [],
         notes: null,
+        isCardio: _isCardioExercise(name), // isCardio 설정
       ));
     });
   }
+
 
   void _removeExercise(int index) {
     setState(() {
@@ -99,17 +106,18 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
     await _logStorageService.saveExerciseLog(log);
   }
 
-  void _updateSets(int index, List<Map<String, int>> sets) {
+  void _updateSets(int index, List<Map<String, dynamic>> sets) {
     setState(() {
       _exercises[index] = Exercise(
         id: _exercises[index].id,
-        // 기존 ID 유지
         name: _exercises[index].name,
         sets: sets,
         notes: _exercises[index].notes,
+        isCardio: _exercises[index].isCardio, // isCardio 유지
       );
     });
   }
+
 
   void _startTimer() {
     setState(() {
@@ -184,6 +192,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
         name: _exercises[index].name,
         sets: _exercises[index].sets,
         notes: newNotes,
+        isCardio: _exercises[index].isCardio, // isCardio 유지
       );
     });
   }
@@ -282,6 +291,25 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
     }
   }
 
+  bool _isCardioExercise(String exerciseName) {
+    List<String> cardioExercises = [
+      "Running",
+      "Cycling",
+      "Jump Rope",
+      "Burpees",
+      "Mountain Climbers",
+      "High Knees",
+      "Boxing",
+      "Swimming",
+      "Jumping Jacks",
+      "Sprints",
+      "Treadmill Incline Walking",
+      // 추가적인 Cardio 운동 이름들
+    ];
+
+    return cardioExercises.contains(exerciseName);
+  }
+
   @override
   void dispose() {
     _audioPlayer.dispose();
@@ -349,16 +377,14 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                           ),
                           Expanded(
                             child: ExerciseCard(
-                              // ExerciseCard에 키 제거
                               exercise: exercise,
                               onDelete: () => _removeExercise(index),
                               onSetsUpdated: (sets) => _updateSets(index, sets),
                               onSave: () async {
-                                // ExerciseCard 내부에서도 동일한 AlertDialog 표시
                                 await _showExitConfirmationDialog();
                               },
-                              onNotesUpdated: (notes) =>
-                                  _updateNotes(index, notes), // 메모 업데이트 콜백 추가
+                              onNotesUpdated: (notes) => _updateNotes(index, notes),
+                              isCardio: exercise.isCardio, // isCardio 전달
                             ),
                           ),
                         ],
@@ -417,13 +443,13 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                             // 타이머 시작/취소 버튼
                             ElevatedButton(
                               onPressed:
-                                  _isTimerRunning ? _cancelTimer : _startTimer,
+                              _isTimerRunning ? _cancelTimer : _startTimer,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor:
-                                    _isTimerRunning ? Colors.red : Colors.green,
+                                _isTimerRunning ? Colors.red : Colors.green,
                                 minimumSize: const Size(50, 36),
                                 padding:
-                                    const EdgeInsets.symmetric(horizontal: 8),
+                                const EdgeInsets.symmetric(horizontal: 8),
                               ),
                               child: Text(_isTimerRunning ? "Stop" : "Start"),
                             ),
@@ -434,7 +460,7 @@ class _MakeMyRoutineScreenState extends State<MakeMyRoutineScreen> {
                               style: ElevatedButton.styleFrom(
                                 minimumSize: const Size(50, 36),
                                 padding:
-                                    const EdgeInsets.symmetric(horizontal: 8),
+                                const EdgeInsets.symmetric(horizontal: 8),
                               ),
                               child: const Text("Set"),
                             ),
