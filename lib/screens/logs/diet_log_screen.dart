@@ -69,6 +69,33 @@ class DietLogScreenState extends State<DietLogScreen> {
     super.initState();
     _initializeChatBotFeedback();
     _loadProgramData();
+    _loadDietLogs();
+  }
+
+  Future<void> _loadDietLogs() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? data = prefs.getString('dietLogs');
+    if (data != null) {
+      try {
+        Map<String, dynamic> jsonData = jsonDecode(data);
+        setState(() {
+          _dietLogsByDate.addAll(jsonData.map((date, meals) {
+            return MapEntry(
+              date,
+              List<MealLog>.from(
+                (meals as List<dynamic>)
+                    .map((mealJson) => MealLog.fromJson(mealJson)),
+              ),
+            );
+          }).cast<String, List<MealLog>>());
+        });
+      } catch (e) {
+        debugPrint('Error decoding diet logs: $e');
+        setState(() {
+          _dietLogsByDate.clear();
+        });
+      }
+    }
   }
 
   Future<void> _loadProgramData() async {
