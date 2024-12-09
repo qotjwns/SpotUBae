@@ -34,6 +34,27 @@ class ExerciseLogDetailScreenState extends State<ExerciseLogDetailScreen> {
     }
   }
 
+  String _formatTime(int seconds) {
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    return '${minutes}m ${remainingSeconds}s';
+  }
+
+  int _convertToSeconds(dynamic time) {
+    if (time is int) {
+      // 이미 초 단위라면 그대로 반환
+      return time;
+    } else if (time is Map<String, dynamic>) {
+      // Map 형태인 경우 분과 초를 초 단위로 변환
+      final minutes = time['minutes'] ?? 0;
+      final seconds = time['seconds'] ?? 0;
+      return (minutes * 60) + seconds;
+    } else {
+      throw ArgumentError('Invalid time format: $time');
+    }
+  }
+
+
   void _checkMissingSetData() {
     bool hasMissingSetData = false;
     if (widget.exercise.isCardio) {
@@ -92,10 +113,10 @@ class ExerciseLogDetailScreenState extends State<ExerciseLogDetailScreen> {
       final set = widget.exercise.sets[i];
       if (widget.exercise.isCardio) {
         exerciseDetails +=
-        'Set ${i + 1}: ${set['workoutTime']} min x Break Time: ${set['breakTime']} min\n';
+        'Set ${i + 1}: ${_formatTime(_convertToSeconds(set['workoutTime']))} x Break Time: ${_formatTime(_convertToSeconds(set['breakTime']))}\n';
       } else {
         exerciseDetails +=
-        'Set ${i + 1}: ${set['weight']} kg x ${set['reps']} reps x Break Time: ${set['breakTime']} min\n';
+        'Set ${i + 1}: ${set['weight']} kg x ${set['reps']} reps x Break Time: ${_formatTime(_convertToSeconds(set['breakTime']))}\n';
       }
     }
 
@@ -360,14 +381,14 @@ Please provide feedback on how this exercise contributes to the user's goals and
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Workout Time: ${set['workoutTime']} min',
+                      'Workout Time: ${_formatTime(_convertToSeconds(set['workoutTime']))}',
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.black87,
                       ),
                     ),
                     Text(
-                      'Break Time: ${set['breakTime']} min',
+                      'Break Time: ${_formatTime(_convertToSeconds(set['breakTime']))}',
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.black87,
@@ -386,7 +407,7 @@ Please provide feedback on how this exercise contributes to the user's goals and
                       ),
                     ),
                     Text(
-                      'Break Time: ${set['breakTime']} min',
+                      'Break Time: ${_formatTime(_convertToSeconds(set['breakTime']))}',
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.black87,

@@ -42,9 +42,16 @@ class ExerciseCardState extends State<ExerciseCard> {
   void _addSet() {
     setState(() {
       if (widget.isCardio) {
-        sets.add({'workoutTime': 0, 'breakTime': 0});
+        sets.add({
+          'workoutTime': {'minutes': 0, 'seconds': 0},
+          'breakTime': {'minutes': 0, 'seconds': 0},
+        });
       } else {
-        sets.add({'weight': 0, 'reps': 0, 'breakTime': 0});
+        sets.add({
+          'weight': 0,
+          'reps': 0,
+          'breakTime': {'minutes': 0, 'seconds': 0},
+        });
       }
     });
     widget.onSetsUpdated(sets);
@@ -58,7 +65,6 @@ class ExerciseCardState extends State<ExerciseCard> {
       widget.onSetsUpdated(sets);
     }
   }
-
   Future<void> _showPicker({
     required BuildContext context,
     required int initialValue,
@@ -88,6 +94,60 @@ class ExerciseCardState extends State<ExerciseCard> {
       },
     );
   }
+
+
+  Future<void> _showTimePicker({
+    required BuildContext context,
+    required Map<String, int> initialValue,
+    required Function(int, int) onSelected,
+  }) async {
+    int selectedMinutes = initialValue['minutes'] ?? 0;
+    int selectedSeconds = initialValue['seconds'] ?? 0;
+
+    await showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return SizedBox(
+          height: 250,
+          child: Row(
+            children: [
+              Expanded(
+                child: CupertinoPicker(
+                  itemExtent: 40,
+                  scrollController: FixedExtentScrollController(
+                      initialItem: selectedMinutes),
+                  onSelectedItemChanged: (value) {
+                    selectedMinutes = value;
+                  },
+                  children: List<Widget>.generate(
+                    60,
+                        (index) => Center(child: Text('$index min')),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: CupertinoPicker(
+                  itemExtent: 40,
+                  scrollController: FixedExtentScrollController(
+                      initialItem: selectedSeconds),
+                  onSelectedItemChanged: (value) {
+                    selectedSeconds = value;
+                  },
+                  children: List<Widget>.generate(
+                    60,
+                        (index) => Center(child: Text('$index sec')),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    onSelected(selectedMinutes, selectedSeconds);
+  }
+
 
   Future<void> _editNotes() async {
     String updatedNotes = notes ?? '';
@@ -361,15 +421,12 @@ class ExerciseCardState extends State<ExerciseCard> {
                           flex: 2,
                           child: GestureDetector(
                             onTap: () async {
-                              await _showPicker(
+                              await _showTimePicker(
                                 context: context,
-                                initialValue: set['workoutTime'] ?? 0,
-                                minValue: 0,
-                                maxValue: 120, // 예: 최대 120분
-                                interval: 5,
-                                onSelected: (value) {
+                                initialValue: set['workoutTime'],
+                                onSelected: (minutes, seconds) {
                                   setState(() {
-                                    sets[index]['workoutTime'] = value;
+                                    sets[index]['workoutTime'] = {'minutes': minutes, 'seconds': seconds};
                                   });
                                   widget.onSetsUpdated(sets);
                                 },
@@ -382,7 +439,7 @@ class ExerciseCardState extends State<ExerciseCard> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                '${set['workoutTime']} min',
+                                '${set['workoutTime']['minutes']} min ${set['workoutTime']['seconds']} sec',
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -394,15 +451,12 @@ class ExerciseCardState extends State<ExerciseCard> {
                           flex: 2,
                           child: GestureDetector(
                             onTap: () async {
-                              await _showPicker(
+                              await _showTimePicker(
                                 context: context,
-                                initialValue: set['breakTime'] ?? 0,
-                                minValue: 0,
-                                maxValue: 60, // 예: 최대 60분
-                                interval: 1,
-                                onSelected: (value) {
+                                initialValue: set['breakTime'] ?? {'minutes': 0, 'seconds': 0},
+                                onSelected: (minutes, seconds) {
                                   setState(() {
-                                    sets[index]['breakTime'] = value;
+                                    sets[index]['breakTime'] = {'minutes': minutes, 'seconds': seconds};
                                   });
                                   widget.onSetsUpdated(sets);
                                 },
@@ -415,7 +469,7 @@ class ExerciseCardState extends State<ExerciseCard> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                '${set['breakTime']} min',
+                                '${set['breakTime']['minutes']} min ${set['breakTime']['seconds']} sec',
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -492,15 +546,12 @@ class ExerciseCardState extends State<ExerciseCard> {
                           flex: 2,
                           child: GestureDetector(
                             onTap: () async {
-                              await _showPicker(
+                              await _showTimePicker(
                                 context: context,
-                                initialValue: set['breakTime'] ?? 0,
-                                minValue: 0,
-                                maxValue: 60, // 예: 최대 60분
-                                interval: 1,
-                                onSelected: (value) {
+                                initialValue: set['breakTime'] ?? {'minutes': 0, 'seconds': 0},
+                                onSelected: (minutes, seconds) {
                                   setState(() {
-                                    sets[index]['breakTime'] = value;
+                                    sets[index]['breakTime'] = {'minutes': minutes, 'seconds': seconds};
                                   });
                                   widget.onSetsUpdated(sets);
                                 },
@@ -513,7 +564,7 @@ class ExerciseCardState extends State<ExerciseCard> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                '${set['breakTime']} min',
+                                '${set['breakTime']['minutes']} min ${set['breakTime']['seconds']} sec',
                                 textAlign: TextAlign.center,
                               ),
                             ),
