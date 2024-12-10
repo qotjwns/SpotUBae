@@ -423,10 +423,23 @@ class ProgramScreenState extends State<ProgramScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your goal weight.';
                         }
-                        final double? weight = double.tryParse(value);
-                        if (weight == null || weight < 30 || weight > 150) {
+                        final double? goalWeight = double.tryParse(value);
+                        final double? currentWeight =
+                        double.tryParse(_currentWeightController.text);
+
+                        if (goalWeight == null || goalWeight < 30 || goalWeight > 150) {
                           return 'Goal weight must be between 30kg and 150kg.';
                         }
+
+                        if (currentWeight != null) {
+                          if (widget.programType == 'Bulking' && goalWeight < currentWeight) {
+                            return 'For Bulking, goal weight must be greater than or equal to current weight.';
+                          } else if (widget.programType == 'Cutting' &&
+                              goalWeight > currentWeight) {
+                            return 'For Cutting, goal weight must be less than or equal to current weight.';
+                          }
+                        }
+
                         return null;
                       },
                     ),
@@ -439,10 +452,20 @@ class ProgramScreenState extends State<ProgramScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your goal body fat percentage.';
                         }
-                        final double? bodyFat = double.tryParse(value);
-                        if (bodyFat == null || bodyFat < 0 || bodyFat > 100) {
+                        final double? goalBodyFat = double.tryParse(value);
+                        final double? currentBodyFat =
+                        double.tryParse(_currentBodyFatController.text);
+
+                        if (goalBodyFat == null || goalBodyFat < 0 || goalBodyFat > 100) {
                           return 'Body fat percentage must be between 0% and 100%.';
                         }
+
+                        if (widget.programType == 'Cutting' &&
+                            currentBodyFat != null &&
+                            goalBodyFat > currentBodyFat) {
+                          return 'For Cutting, goal body fat must not exceed current body fat.';
+                        }
+
                         return null;
                       },
                     ),
